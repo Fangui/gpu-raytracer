@@ -2,7 +2,6 @@
 
 struct KdNodeGpu
 {
-
     KdNodeGpu *left;
     KdNodeGpu *right;
 
@@ -10,4 +9,7 @@ struct KdNodeGpu
 
     Triangle *beg;
     Triangle *end;
+
 };
+
+__global__ void search(struct KdNodeGpu *root, Ray *r, float *dist);
