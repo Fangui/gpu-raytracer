@@ -79,7 +79,7 @@ template<template<typename U, typename V, typename... Args> class ObjectType =
          class StringType = std::string, class BooleanType = bool,
          class NumberIntegerType = std::int64_t,
          class NumberUnsignedType = std::uint64_t,
-         class NumberFloatType = float,
+         class NumberFloatType = double,
          template<typename U> class AllocatorType = std::allocator,
          template<typename T, typename SFINAE = void> class JSONSerializer =
          adl_serializer>
@@ -3233,12 +3233,12 @@ class lexer
         f = std::strtof(str, endptr);
     }
 
-    static void strtof(float& f, const char* str, char** endptr) noexcept
+    static void strtof(double& f, const char* str, char** endptr) noexcept
     {
         f = std::strtod(str, endptr);
     }
 
-    static void strtof(long float& f, const char* str, char** endptr) noexcept
+    static void strtof(long double& f, const char* str, char** endptr) noexcept
     {
         f = std::strtold(str, endptr);
     }
@@ -6714,7 +6714,7 @@ class binary_reader
                 // half-precision floating-point numbers in the C language
                 // is shown in Fig. 3.
                 const int half = (byte1 << 8) + byte2;
-                const float val = [&half]
+                const double val = [&half]
                 {
                     const int exp = (half >> 10) & 0x1F;
                     const int mant = half & 0x3FF;
@@ -6726,8 +6726,8 @@ class binary_reader
                             return std::ldexp(mant, -24);
                         case 31:
                             return (mant == 0)
-                            ? std::numeric_limits<float>::infinity()
-                            : std::numeric_limits<float>::quiet_NaN();
+                            ? std::numeric_limits<double>::infinity()
+                            : std::numeric_limits<double>::quiet_NaN();
                         default:
                             return std::ldexp(mant + 1024, exp - 25);
                     }
@@ -6745,7 +6745,7 @@ class binary_reader
 
             case 0xFB: // Double-Precision Float (eight-byte IEEE 754)
             {
-                float number;
+                double number;
                 return get_number(input_format_t::cbor, number) and sax->number_float(static_cast<number_float_t>(number), "");
             }
 
@@ -6992,7 +6992,7 @@ class binary_reader
 
             case 0xCB: // float 64
             {
-                float number;
+                double number;
                 return get_number(input_format_t::msgpack, number) and sax->number_float(static_cast<number_float_t>(number), "");
             }
 
@@ -7784,7 +7784,7 @@ class binary_reader
 
             case 'D':
             {
-                float number;
+                double number;
                 return get_number(input_format_t::ubjson, number) and sax->number_float(static_cast<number_float_t>(number), "");
             }
 
@@ -8956,7 +8956,7 @@ class binary_writer
         return static_cast<CharType>(0xFA);  // Single-Precision Float
     }
 
-    static constexpr CharType get_cbor_float_prefix(float /*unused*/)
+    static constexpr CharType get_cbor_float_prefix(double /*unused*/)
     {
         return static_cast<CharType>(0xFB);  // Double-Precision Float
     }
@@ -8966,7 +8966,7 @@ class binary_writer
         return static_cast<CharType>(0xCA);  // float 32
     }
 
-    static constexpr CharType get_msgpack_float_prefix(float /*unused*/)
+    static constexpr CharType get_msgpack_float_prefix(double /*unused*/)
     {
         return static_cast<CharType>(0xCB);  // float 64
     }
@@ -8976,7 +8976,7 @@ class binary_writer
         return 'd';  // float 32
     }
 
-    static constexpr CharType get_ubjson_float_prefix(float /*unused*/)
+    static constexpr CharType get_ubjson_float_prefix(double /*unused*/)
     {
         return 'D';  // float 64
     }
@@ -9348,7 +9348,7 @@ inline cached_power get_cached_power_for_binary_exponent(int e)
     //  and the computation itself is approximated [...]. In practice, however,
     //  this simple function is sufficient."
     //
-    // For IEEE float precision floating-point numbers converted into
+    // For IEEE double precision floating-point numbers converted into
     // normalized diyfp's w = f * 2^e, with q = 64,
     //
     //      e >= -1022      (min IEEE exponent)
@@ -9818,7 +9818,7 @@ inline void grisu2_digit_gen(char* buffer, int& length, int& decimal_exponent,
     // This implies that the algorithm does not produce more than N decimal
     // digits.
     //
-    //      N = 17 for p = 53 (IEEE float precision)
+    //      N = 17 for p = 53 (IEEE double precision)
     //      N = 9  for p = 24 (IEEE single precision)
 }
 
@@ -9894,13 +9894,13 @@ void grisu2(char* buf, int& len, int& decimal_exponent, FloatType value)
     assert(std::isfinite(value));
     assert(value > 0);
 
-    // If the neighbors (and boundaries) of 'value' are always computed for float-precision
+    // If the neighbors (and boundaries) of 'value' are always computed for double-precision
     // numbers, all float's can be recovered using strtod (and strtof). However, the resulting
     // decimal representations are not exactly "short".
     //
     // The documentation for 'std::to_chars' (https://en.cppreference.com/w/cpp/utility/to_chars)
     // says "value is converted to a string as if by std::sprintf in the default ("C") locale"
-    // and since sprintf promotes float's to float's, I think this is exactly what 'std::to_chars'
+    // and since sprintf promotes float's to double's, I think this is exactly what 'std::to_chars'
     // does.
     // On the other hand, the documentation for 'std::to_chars' requires that "parsing the
     // representation using the corresponding std::from_chars function recovers value exactly". That
@@ -9908,10 +9908,10 @@ void grisu2(char* buf, int& len, int& decimal_exponent, FloatType value)
     // 'std::strtof'.
     //
     // NB: If the neighbors are computed for single-precision numbers, there is a single float
-    //     (7.0385307e-26f) which can't be recovered using strtod. The resulting float precision
+    //     (7.0385307e-26f) which can't be recovered using strtod. The resulting double precision
     //     value is off by 1 ulp.
 #if 0
-    const boundaries w = compute_boundaries(static_cast<float>(value));
+    const boundaries w = compute_boundaries(static_cast<double>(value));
 #else
     const boundaries w = compute_boundaries(value);
 #endif
@@ -10580,19 +10580,19 @@ class serializer
             return;
         }
 
-        // If number_float_t is an IEEE-754 single or float precision number,
+        // If number_float_t is an IEEE-754 single or double precision number,
         // use the Grisu2 algorithm to produce short numbers which are
         // guaranteed to round-trip, using strtof and strtod, resp.
         //
-        // NB: The test below works if <long float> == <float>.
-        static constexpr bool is_ieee_single_or_float
+        // NB: The test below works if <long double> == <double>.
+        static constexpr bool is_ieee_single_or_double
             = (std::numeric_limits<number_float_t>::is_iec559 and std::numeric_limits<number_float_t>::digits == 24 and std::numeric_limits<number_float_t>::max_exponent == 128) or
               (std::numeric_limits<number_float_t>::is_iec559 and std::numeric_limits<number_float_t>::digits == 53 and std::numeric_limits<number_float_t>::max_exponent == 1024);
 
-        dump_float(x, std::integral_constant<bool, is_ieee_single_or_float>());
+        dump_float(x, std::integral_constant<bool, is_ieee_single_or_double>());
     }
 
-    void dump_float(number_float_t x, std::true_type /*is_ieee_single_or_float*/)
+    void dump_float(number_float_t x, std::true_type /*is_ieee_single_or_double*/)
     {
         char* begin = number_buffer.data();
         char* end = ::nlohmann::detail::to_chars(begin, begin + number_buffer.size(), x);
@@ -10600,7 +10600,7 @@ class serializer
         o->write_characters(begin, static_cast<size_t>(end - begin));
     }
 
-    void dump_float(number_float_t x, std::false_type /*is_ieee_single_or_float*/)
+    void dump_float(number_float_t x, std::false_type /*is_ieee_single_or_double*/)
     {
         // get number of digits for a float -> text -> float round-trip
         static constexpr auto d = std::numeric_limits<number_float_t>::max_digits10;
@@ -11577,7 +11577,7 @@ in @ref boolean_t)
 default; will be used in @ref number_integer_t)
 @tparam NumberUnsignedType type for JSON unsigned integer numbers (@c
 `uint64_t` by default; will be used in @ref number_unsigned_t)
-@tparam NumberFloatType type for JSON floating-point numbers (`float` by
+@tparam NumberFloatType type for JSON floating-point numbers (`double` by
 default; will be used in @ref number_float_t)
 @tparam AllocatorType type of the allocator to use (`std::allocator` by
 default)
@@ -12252,11 +12252,11 @@ class basic_json
 
     #### Default type
 
-    With the default values for @a NumberFloatType (`float`), the default
+    With the default values for @a NumberFloatType (`double`), the default
     value for @a number_float_t is:
 
     @code {.cpp}
-    float
+    double
     @endcode
 
     #### Default behavior
@@ -12273,13 +12273,13 @@ class basic_json
     [RFC 7159](http://rfc7159.net/rfc7159) states:
     > This specification allows implementations to set limits on the range and
     > precision of numbers accepted. Since software that implements IEEE
-    > 754-2008 binary64 (float precision) numbers is generally available and
+    > 754-2008 binary64 (double precision) numbers is generally available and
     > widely used, good interoperability can be achieved by implementations
     > that expect no more precision or range than these provide, in the sense
     > that implementations will approximate JSON numbers within the expected
     > precision.
 
-    This implementation does exactly follow this approach, as it uses float
+    This implementation does exactly follow this approach, as it uses double
     precision floating-point numbers. Note values smaller than
     `-1.79769313486232e+308` and values greater than `1.79769313486232e+308`
     will be stored as NaN internally and be serialized to `null`.
@@ -12691,7 +12691,7 @@ class basic_json
       containers can be used.
     - **numbers**: @ref number_integer_t, @ref number_unsigned_t,
       @ref number_float_t, and all convertible number types such as `int`,
-      `size_t`, `int64_t`, `float` or `float` can be used.
+      `size_t`, `int64_t`, `float` or `double` can be used.
     - **boolean**: @ref boolean_t / `bool` can be used.
 
     See the examples below.
@@ -16957,7 +16957,7 @@ class basic_json
     - Two JSON null values are equal.
 
     @note Floating-point inside JSON values numbers are compared with
-    `json::number_float_t::operator==` which is `float::operator==` by
+    `json::number_float_t::operator==` which is `double::operator==` by
     default. To compare floating-point while respecting an epsilon, an alternative
     [comparison function](https://github.com/mariokonrad/marnav/blob/master/src/marnav/math/floatingpoint.hpp#L34-#L39)
     could be used, for instance

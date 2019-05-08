@@ -12,7 +12,7 @@ Vector Light::compute_light(const Vector &inter,
                             const KdTree &tree,
                             float &rat) const
 {
-    Vector l_dir = -dir;
+    Vector l_dir = dir * -1;
 
     Vector origin = inter + l_dir * BIAS;
     Ray ray(origin, l_dir);

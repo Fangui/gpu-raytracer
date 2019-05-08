@@ -27,16 +27,16 @@ struct Triangle
         uv_pos[2] = p3;
 
         this->id = id;
-
-        float x = 0.f;
-        float y = 0.f;
-        float z = 0.f;
     }
 
     Triangle() = default;
 
     Vector get_mean(void) // return barycentre
     {
+        float x = 0.f;
+        float y = 0.f;
+        float z = 0.f;
+
         for (unsigned i = 0; i < 3; ++i)
         {
             x += vertices[i][0];
