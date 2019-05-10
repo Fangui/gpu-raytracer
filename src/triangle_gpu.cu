@@ -1,6 +1,6 @@
 #include "triangle_gpu.hh"
 
-__global__ void intersect(struct Triangle_gpu *d_tri, Ray *ray, bool *is_intersected)
+__device__ void intersect(Triangle_gpu *d_tri, Ray *ray, bool *is_intersected)
 {
     *is_intersected = false;
 

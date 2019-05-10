@@ -71,12 +71,16 @@ __global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Vector *d_u, Vector *d
     o += b;
 
     Vector dir = (o - *d_cam_pos).norm_inplace();
-    Ray r(*d_cam_pos, dir);
+    Ray ray(*d_cam_pos, dir);
 
-    d_vect[j * width + i] = Vector(1, 0.5, 0.5); // cast ray
+    float dist = -1;
+    search(d_tree, ray, &dist);
+    if (dist == -1)
+        d_vect[j * width + i] = Vector(0, 1, 0); // cast ray
+    else
+        d_vect[j * width + i] = Vector(1, 0, 0);
 }
 
-#include "triangle_gpu.hh"
 int main(int argc, char *argv[])
 {
     std::string path_scene;

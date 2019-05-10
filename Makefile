@@ -1,13 +1,13 @@
 NVCC ?= nvcc
 VPATH=src/
 CXXFLAGS += -Wall -Wextra -std=c++17 -pedantic -g3 -flto -fopenmp -march=native # for perf -g3 -fno-omit-frame-pointer
-CUDA_FLAG = -Xcompiler -fopenmp -Xcompiler -g
+CUDA_FLAG = -arch=sm_35 -Xcompiler -fopenmp -Xcompiler -g
 CXXLIBS += -lSDL2 -lSDL2_image
 
 SRC = kdtree.cc triangle.cc material.cc parse.cc light.cc \
 	compute_light.cc matrix.cc texture.cc sphere_light.cc
 
-CUDA_SRC = src/vector.cu src/main.cu src/triangle_gpu.cu src/device.cu
+CUDA_SRC = src/vector.cu src/main.cu src/triangle_gpu.cu src/device.cu src/kdtree.cu
 OBJ = ${SRC:.cc=.o}
 BIN = main
 

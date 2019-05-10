@@ -11,4 +11,4 @@ struct KdNodeGpu
     Triangle_gpu *end;
 };
 
-__global__ void search(struct KdNodeGpu *root, Ray *r, float *dist);
+__device__ void search(struct KdNodeGpu *root, Ray &r, float *dist);

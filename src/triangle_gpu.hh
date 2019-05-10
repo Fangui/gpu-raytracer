@@ -14,5 +14,4 @@ struct Triangle_gpu
     unsigned char id;
 };
 
-__global__
-void intersect(struct Triangle_gpu *d_tri, const Ray *ray, bool *is_intersected);
+__device__ void intersect(Triangle_gpu *d_tri, Ray *ray, bool *is_intersected);
