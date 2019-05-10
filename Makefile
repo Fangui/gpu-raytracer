@@ -7,7 +7,7 @@ CXXLIBS += -lSDL2 -lSDL2_image
 SRC = kdtree.cc triangle.cc material.cc parse.cc light.cc \
 	compute_light.cc matrix.cc texture.cc sphere_light.cc
 
-CUDA_SRC = src/vector.cu src/main.cu
+CUDA_SRC = src/vector.cu src/main.cu src/triangle_gpu.cu
 OBJ = ${SRC:.cc=.o}
 BIN = main
 
