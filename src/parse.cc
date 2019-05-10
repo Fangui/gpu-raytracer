@@ -48,11 +48,11 @@ Scene parse_scene(const std::string& filename)
 
         auto objs = j["meshs"];
         for (auto e : objs)
-            scene.objs.emplace_back(e);
+            scene.objs.emplace_back<std::string>(e);
 
         auto mtls = j["materials"];
         for (auto e : mtls)
-            scene.mtls.emplace_back(e);
+            scene.mtls.emplace_back<std::string>(e);
 
         auto lights = j["lights"];
         for (auto e : lights)

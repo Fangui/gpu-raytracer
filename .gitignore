@@ -3,3 +3,7 @@ main
 *.max
 *.fbx
 *.ppm
+
+.idea
+.vs
+cmake-build*

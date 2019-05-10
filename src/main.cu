@@ -38,9 +38,9 @@ int write_ppm(const std::string &out_path, Vector *vect,
                 int g = vect[index][1] * 255.0;
                 int b = vect[index++][2] * 255.0;
 
-                r = std::min(r, 255);
-                g = std::min(g, 255);
-                b = std::min(b, 255);
+                r = std::fmin(r, 255);
+                g = std::fmin(g, 255);
+                b = std::fmin(b, 255);
                 out << r << " " << g << " " << b << "  ";
             }
             out << '\n';
