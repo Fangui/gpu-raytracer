@@ -1,4 +1,4 @@
-#include "triangle.hh"
+#include "triangle_gpu.hh"
 
 struct KdNodeGpu
 {
@@ -7,9 +7,8 @@ struct KdNodeGpu
 
     float box[6];
 
-    Triangle *beg;
-    Triangle *end;
-
+    Triangle_gpu *beg;
+    Triangle_gpu *end;
 };
 
 __global__ void search(struct KdNodeGpu *root, Ray *r, float *dist);

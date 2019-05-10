@@ -17,7 +17,7 @@ __global__ void search(struct KdNodeGpu *root, Ray *r, float *dist)
         bool has_right = (node->right == nullptr);
 
         bool intersect = false;
-        for (Triangle *tri = node->beg; !intersect && tri < node->end; ++tri)
+        for (Triangle_gpu *tri = node->beg; !intersect && tri < node->end; ++tri)
         {
             // check intersect
         }

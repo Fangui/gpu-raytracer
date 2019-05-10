@@ -76,6 +76,7 @@ __global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Vector *d_u, Vector *d
     d_vect[j * width + i] = Vector(1, 0.5, 0.5); // cast ray
 }
 
+#include "triangle_gpu.hh"
 int main(int argc, char *argv[])
 {
     std::string path_scene;
