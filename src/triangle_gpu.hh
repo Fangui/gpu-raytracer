@@ -16,5 +16,3 @@ struct Triangle_gpu
 
 __global__
 void intersect(struct Triangle_gpu *d_tri, Ray *ray, bool *is_intersected);
-
-struct Triangle_gpu *init_triangle_gpu(const Triangle &triangle);
