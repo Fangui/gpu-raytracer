@@ -54,6 +54,7 @@ Scene parse_scene(const std::string& filename)
         for (auto e : mtls)
             scene.mtls.emplace_back(e);
 
+        scene.a_light = Vector(0, 0, 0);
         auto lights = j["lights"];
         for (auto e : lights)
         {
@@ -355,23 +356,6 @@ void obj_to_vertices(const std::string &s, const std::vector<std::string> &mat_n
             }
             else
             {
-                bool inside = false;
-                for (size_t i = 0; i < scene.emissive_name.size(); ++i)
-                {
-                    if (scene.emissive_name[i] == mat_names[cur_idx])
-                    {
-                        inside = true;
-                        break;
-                    }
-                }
-
-                if (inside && set_material.find(mat_names[cur_idx]) == set_material.end())
-                {
-                    set_material.insert(mat_names[cur_idx]);
-                    scene.emissive.push_back((v[idx[0]] + v[idx[3]] + v[idx[6]]) / 3);
-                    std::cout << "insert: " << mat_names[cur_idx] << '\n'; //FIXME multiple emissive
-                }
-
                 Triangle t(v[idx[0]], v[idx[3]], v[idx[6]],
                            vt[idx[1]], vt[idx[4]], vt[idx[7]],
                            vn[idx[2]], vn[idx[5]], vn[idx[8]], cur_idx);

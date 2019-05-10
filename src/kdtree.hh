@@ -96,6 +96,7 @@ public:
         return root_.get()->size();
     }
 
+    childPtr root_;
 private:
     static inline auto make_child()
     {
@@ -104,8 +105,7 @@ private:
 
     static inline auto make_child(iterator_v beg, iterator_v end)
     {
-        return std::make_unique<KdNode>(KdNode(beg, end));
+        return std::make_unique<KdNode>(beg, end);
     }
 
-    childPtr root_;
 };

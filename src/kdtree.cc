@@ -90,7 +90,7 @@ KdTree::KdNode::KdNode(iterator_v beg, iterator_v end)
     else
     {
         axis = get_longest_axis(box);
-        __gnu_parallel::sort(beg, end, func[axis]);
+        sort(beg, end, func[axis]);
 
         const iterator_v med = beg + dist / 2;
 

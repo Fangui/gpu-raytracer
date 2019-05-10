@@ -30,13 +30,13 @@ static KdNodeGpu* upload_kd_node(const KdTree::childPtr& kd_node)
     auto len = std::distance(kd_node->beg, kd_node->end);
     cudaCheckError(cudaMalloc(&node->beg, sizeof(Triangle_gpu) * len));
     // Trick to get first elem address: we know a contiguous vector is hidden behind node->beg
-    auto& first = *node->beg;
+    auto& first = *kd_node->beg;
     cudaCheckError(cudaMemcpy(&node->beg, &first, sizeof(Triangle_gpu) * len, cudaMemcpyHostToDevice));
 
     return node;
 }
 
-static KdNodeGpu* upload_kd_tree(const KdTree& kd_tree)
+KdNodeGpu* upload_kd_tree(const KdTree& kd_tree)
 {
     return upload_kd_node(kd_tree.root_);
 }

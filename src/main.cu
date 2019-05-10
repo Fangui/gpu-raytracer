@@ -2,7 +2,6 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
-#include <omp.h>
 #include <unordered_map>
 
 #include "compute_light.hh"
@@ -12,9 +11,11 @@
 
 #include <fstream>
 #include <vector>
+#include <omp.h>
 
 #include "parse.hh"
 #include "vector.hh"
+#include "device.hh"
 
 int write_ppm(const std::string &out_path, Vector *vect,
         int width, int height)
@@ -53,7 +54,7 @@ int write_ppm(const std::string &out_path, Vector *vect,
     return 0;
 }
 
-__global__ void render(Vector *d_vect, Vector *d_u, Vector *d_v, 
+__global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Vector *d_u, Vector *d_v, 
                        Vector *d_center, Vector *d_cam_pos, 
                        unsigned width, unsigned height)
 {
@@ -104,6 +105,15 @@ int main(int argc, char *argv[])
     L /= val; 
     Vector center = scene.cam_pos + (w * L); // center
 
+    std::vector<Triangle> vertices;
+    for (const auto& name : scene.objs)
+      obj_to_vertices(name, scene.mat_names, vertices, scene);
+
+    auto tree = KdTree(vertices.begin(), vertices.end());
+    std::cout << tree.size() << std::endl;
+
+    KdNodeGpu *d_tree = upload_kd_tree(tree);
+
     Vector *d_vect;
     Vector *d_u;
     Vector *d_v;
@@ -129,7 +139,7 @@ int main(int argc, char *argv[])
                    scene.height / 8 + (scene.height % 8 != 0));
     dim3 dim_thread(tx, ty);
 
-    render<<<dim_block, dim_thread >>>(d_vect, d_u, d_v, d_center, d_cam_pos,  
+    render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_u, d_v, d_center, d_cam_pos,  
                                       scene.width, scene.height);
 
     cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(struct Vector), 
@@ -147,19 +157,7 @@ int main(int argc, char *argv[])
     /*
     // distance between camera and center of screen
 
-    std::vector<Triangle> vertices;
-    for (const auto& name : scene.objs)
-      obj_to_vertices(name, scene.mat_names, vertices, scene);
 
-    float t2 = omp_get_wtime();
-    std::cout << "Time to parse file: " << t2 - t1 << "s\n";
-
-    t1 = omp_get_wtime();
-    auto tree = KdTree(vertices.begin(), vertices.end());
-    t2 = omp_get_wtime();
-    std::cout << "Time build kdTree: " << t2 - t1 << "s\n";
-
-    std::cout << tree.size() << std::endl;
 
     std::vector<Vector> vect(scene.width * scene.height);
 
