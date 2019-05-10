@@ -3,7 +3,6 @@
 #include "triangle.hh"
 #include "light.hh"
 #include "material.hh"
-#include "matrix.hh"
 #include "json.hpp"
 
 #include <algorithm>
@@ -109,29 +108,6 @@ Scene parse_scene(const std::string& filename)
 
             auto sc = e["scale"].begin();
             Vector s(1, 1, 1);
-
-            Matrix translat{4, 4, {1.f, 0.f, 0.f, r[0],
-                                   0.f, 1.f, 0.f, r[1],
-                                   0.f, 0.f, 1.f, r[2],
-                                   0.f, 0.f, 0.f, 1.f}};
-
-            Matrix rotat1{3, 3, {1.f, 0.f, 0.f,
-                                0.f, cosf(to_rad(r[0])), sinf(to_rad(r[0])),
-                                0.f, -sinf(to_rad(r[0])), cosf(to_rad(r[0]))}};
-
-
-            Matrix rotat2{3, 3, {cosf(to_rad(r[1])), 0.f, -sinf(to_rad(r[1])),
-                                0.f, 1.f, 0.f,
-                                sinf(to_rad(r[1])), 0.f, cosf(to_rad(r[1]))}};
-
-            Matrix rotat3{3, 3, {cosf(to_rad(r[2])), sinf(to_rad(r[2])), 0.f,
-                                -sinf(to_rad(r[2])), cosf(to_rad(r[2])), 0.f,
-                                0.f, 0.f, 1.f}};
-
-
-            auto rotat = rotat1.mat_mul(rotat2);
-            rotat = rotat.mat_mul(rotat3);
-            scene.transform = rotat;
 
             s.set(sc[0], sc[1], sc[2]);
             scene.objects.emplace_back(Object(mesh, mtl, p, r, s));

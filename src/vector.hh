@@ -1,5 +1,11 @@
 #pragma once
 
+#ifdef __CUDACC__
+#define CUDA_HOSTDEV __host__ __device__
+#else
+#define CUDA_HOSTDEV
+#endif
+
 #include <cmath>
 #include <iostream>
 
@@ -11,9 +17,9 @@ inline float to_rad(int deg)
 class Vector
 {
 public:
-    __host__ __device__ Vector() {}
+    CUDA_HOSTDEV Vector() {}
 
-    __host__ __device__ Vector(float x, float y, float z)
+    CUDA_HOSTDEV Vector(float x, float y, float z)
     {
       tab[0] = x;
       tab[1] = y;
@@ -25,34 +31,34 @@ public:
         return tab[0] == 0 || tab[1] == 0 || tab[2] == 0;
     }
     
-    __host__ __device__ Vector operator+(const Vector &rhs) const;
-    __host__ __device__ Vector operator+=(const Vector &rhs);
-    __host__ __device__ Vector operator-(const Vector &rhs) const;
-    __host__ __device__ Vector operator-=(const Vector &rhs);
-    __host__ __device__ Vector operator*(float lambda) const;
-    __host__ __device__ Vector operator*=(float lambda);
-    __host__ __device__ Vector operator*(const Vector &rhs) const;
-    __host__ __device__ Vector operator*=(const Vector &rhs);
-    __host__ __device__ Vector operator/(const Vector &rhs) const;
-    __host__ __device__ Vector operator/=(const Vector &rhs);
-    __host__ __device__ Vector operator/(float lambda) const;
-    __host__ __device__ Vector operator/=(float lambda);
+    CUDA_HOSTDEV Vector operator+(const Vector &rhs) const;
+    CUDA_HOSTDEV Vector operator+=(const Vector &rhs);
+    CUDA_HOSTDEV Vector operator-(const Vector &rhs) const;
+    CUDA_HOSTDEV Vector operator-=(const Vector &rhs);
+    CUDA_HOSTDEV Vector operator*(float lambda) const;
+    CUDA_HOSTDEV Vector operator*=(float lambda);
+    CUDA_HOSTDEV Vector operator*(const Vector &rhs) const;
+    CUDA_HOSTDEV Vector operator*=(const Vector &rhs);
+    CUDA_HOSTDEV Vector operator/(const Vector &rhs) const;
+    CUDA_HOSTDEV Vector operator/=(const Vector &rhs);
+    CUDA_HOSTDEV Vector operator/(float lambda) const;
+    CUDA_HOSTDEV Vector operator/=(float lambda);
 
-    __host__ __device__  float operator[](unsigned idx) const { return tab[idx]; };
-    __host__ __device__  float& operator[](unsigned idx) { return tab[idx]; };
+    CUDA_HOSTDEV  float operator[](unsigned idx) const { return tab[idx]; };
+    CUDA_HOSTDEV  float& operator[](unsigned idx) { return tab[idx]; };
 
-   // __host__ __device__ Vector operator*(float lambda, const Vector &rhs);
+   // CUDA_HOSTDEV Vector operator*(float lambda, const Vector &rhs);
 
-    __host__ __device__ Vector cross_product(const Vector &rhs) const;
-    __host__ __device__ Vector cross_product_inplace(const Vector &rhs);
-    __host__ __device__ Vector norm(void) const;
-    __host__ __device__ Vector norm_inplace(void);
+    CUDA_HOSTDEV Vector cross_product(const Vector &rhs) const;
+    CUDA_HOSTDEV Vector cross_product_inplace(const Vector &rhs);
+    CUDA_HOSTDEV Vector norm(void) const;
+    CUDA_HOSTDEV Vector norm_inplace(void);
 
-     __host__ __device__ float dot_product(const Vector &rhs) const;
+     CUDA_HOSTDEV float dot_product(const Vector &rhs) const;
 
-     __host__ __device__ float get_dist() { return sqrtf(tab[0] * tab[0] + tab[1] * tab[1] + tab[2] * tab[2]); };
+     CUDA_HOSTDEV float get_dist() { return sqrtf(tab[0] * tab[0] + tab[1] * tab[1] + tab[2] * tab[2]); };
 
-     __host__ __device__ void set(float x, float y, float z)
+     CUDA_HOSTDEV void set(float x, float y, float z)
     {
         tab[0] = x;
         tab[1] = y;
@@ -64,5 +70,5 @@ public:
     float tab[3];
 };
 
-__host__ __device__ Vector operator/(float lambda, const Vector &v);
-__host__ __device__ Vector operator*(float lambda, const Vector &v);
+CUDA_HOSTDEV Vector operator/(float lambda, const Vector &v);
+CUDA_HOSTDEV Vector operator*(float lambda, const Vector &v);
