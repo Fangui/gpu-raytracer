@@ -5,6 +5,13 @@
 #define EPSILON 0.00001
 #define BIAS    0.001
 
+#ifdef __CUDACC__
+#define CUDA_HOSTDEV __host__ __device__
+#else
+#define CUDA_HOSTDEV
+#endif
+
+
 struct Ray;
 
 struct Triangle
@@ -58,13 +65,12 @@ struct Triangle
 
 struct Ray
 {
-    Ray(const Vector &o, const Vector &dir) : o(o), dir(dir)
+    CUDA_HOSTDEV Ray(const Vector &o, const Vector &dir) : o(o), dir(dir)
     {
         inv = Vector(1.f / dir[0], 1.f / dir[1], 1.f / dir[2]);
         sign[0] = inv[0] < 0;
         sign[1] = inv[1] < 0;
         sign[2] = inv[2] < 0;
-        ni = 1;
     };
     Vector o;
     Vector dir;
@@ -73,7 +79,6 @@ struct Ray
 
     float u;
     float v;
-    float ni;
 
     short sign[3];
 };

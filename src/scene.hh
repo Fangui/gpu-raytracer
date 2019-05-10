@@ -18,8 +18,6 @@ struct Scene
             delete lights[i];
     }
 
-    int nb_ray = 16;
-    unsigned char depth = 2;
     int height;
     int width;
     Vector cam_pos;
