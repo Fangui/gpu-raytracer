@@ -42,8 +42,8 @@ __device__ void search(struct KdNodeGpu *root, Ray &r, float *dist)
     {
         if (is_inside(node->box, r))
         {
-            bool has_left = (node->left == nullptr);
-            bool has_right = (node->right == nullptr);
+            bool has_left = (node->left != nullptr);
+            bool has_right = (node->right != nullptr);
 
             bool inter = false;
             for (Triangle_gpu *tri = node->beg; tri < node->end; ++tri)

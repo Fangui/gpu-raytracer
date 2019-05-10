@@ -15,6 +15,12 @@ static inline void gpuAssert(cudaError_t code, const char *file, int line)
     exit(code);
 }
 
+__global__ void print(KdNodeGpu *node)
+{
+    Vector vert = node->beg->vertices[0];
+    printf("%f %f %f\n", vert[0], vert[1], vert[2]);
+}
+
 static KdNodeGpu* upload_kd_node(const KdTree::childPtr& kd_node)
 {
     if (!kd_node)
@@ -35,6 +41,9 @@ static KdNodeGpu* upload_kd_node(const KdTree::childPtr& kd_node)
     KdNodeGpu* node_gpu;
     cudaCheckError(cudaMalloc(&node_gpu, sizeof(*node_gpu)));
     cudaCheckError(cudaMemcpy(node_gpu, &node, sizeof(node), cudaMemcpyHostToDevice));
+
+    //std::cout << kd_node.get()->beg->vertices[0] << std::endl;
+    //print<<<1, 1>>>(node_gpu);
 
     return node_gpu;
 }
