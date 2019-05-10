@@ -1,13 +1,5 @@
 #include "triangle_gpu.hh"
 
-struct Triangle_gpu *init_triangle_gpu(const Triangle &triangle)
-{
-    Triangle_gpu *triangle_gpu;
-    cudaMalloc(&triangle_gpu, sizeof(struct Triangle_gpu));
-    cudaMemcpy(triangle_gpu, &triangle, sizeof(struct Triangle_gpu), cudaMemcpyHostToDevice);
-    return triangle_gpu;
-}
-
 __global__ void intersect(struct Triangle_gpu *d_tri, Ray *ray, bool *is_intersected)
 {
     *is_intersected = false;
