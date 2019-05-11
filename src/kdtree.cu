@@ -35,17 +35,21 @@ __device__ void search(struct KdNodeGpu *root, Ray &r, float *dist)
     KdNodeGpu *stack[64];
     stack[0] = root;
 
-    KdNodeGpu *node = root;
     size_t idx = 1;
 
     do
     {
+        KdNodeGpu *node = stack[--idx];
         if (is_inside(node->box, r))
         {
+            if (idx >= sizeof(stack) / sizeof(*stack))
+                return; // FIXME
+
             bool has_left = (node->left != nullptr);
             bool has_right = (node->right != nullptr);
 
             bool inter = false;
+
             for (Triangle_gpu *tri = node->beg; tri < node->end; ++tri)
             {
                 intersect(tri, &r, &inter);
@@ -53,22 +57,13 @@ __device__ void search(struct KdNodeGpu *root, Ray &r, float *dist)
                 if (inter)
                 {
                     *dist = 10; //FIXME
-                    return;
                 }
             }
 
-            if (!has_left || !has_right) // child
-            {
-                node = stack[--idx];
-            }
-            else
-            {
-                node = has_left ? node->left : node->right;
-                if (has_left && has_right)
-                    stack[idx++] = node->right;
-            }
+            if (has_left)
+                stack[idx++] = node->left;
+            if (has_right)
+                stack[idx++] = node->right;
         }
-        else
-            node = stack[--idx];
-    } while (idx > 1);
+    } while (idx);
 }

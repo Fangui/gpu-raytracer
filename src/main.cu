@@ -29,9 +29,9 @@ int write_ppm(const std::string &out_path, Vector *vect,
         out << width << " " << height << '\n';
         out << 255 << '\n';
 
-        for (int i = 0; i < width; ++i)
+        for (int j = 0; j < height; ++j)
         {
-            for (int j = 0; j < height; ++j)
+            for (int i = 0; i < width; ++i)
             {
                 int r = vect[index][0] * 255.0;
                 int g = vect[index][1] * 255.0;
@@ -58,14 +58,14 @@ __global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Vector *d_u, Vector *d
                        Vector *d_center, Vector *d_cam_pos, 
                        unsigned width, unsigned height)
 {
-    unsigned i = blockDim.x * blockIdx.x + threadIdx.x;
-    unsigned j = blockDim.y * blockIdx.y + threadIdx.y;
+    int i = blockDim.x * blockIdx.x + threadIdx.x;
+    int j = blockDim.y * blockIdx.y + threadIdx.y;
 
     if (i >= width || j >= height)
         return;
 
-    Vector o = *d_u * j;
-    Vector b = *d_v * i;
+    Vector o = *d_u * (j - static_cast<int>(height) / 2);
+    Vector b = *d_v * (i - static_cast<int>(width) / 2);
 
     o += *d_center;
     o += b;
@@ -76,9 +76,12 @@ __global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Vector *d_u, Vector *d
     float dist = -1;
     search(d_tree, ray, &dist);
     if (dist == -1)
-        d_vect[j * width + i] = Vector(0, 1, 0); // cast ray
+        d_vect[i * height + j] = Vector(0.1, 0.1, 0.1); // cast ray
     else
-        d_vect[j * width + i] = Vector(1, 0, 0);
+    {
+        d_vect[i * height + j] = Vector(1, 0, 0);
+    }
+
 }
 
 int main(int argc, char *argv[])
@@ -140,8 +143,8 @@ int main(int argc, char *argv[])
     constexpr int tx = 8;
     constexpr int ty = 8;
 
-    dim3 dim_block(scene.width / 8 + (scene.width % 8 != 0), 
-                   scene.height / 8 + (scene.height % 8 != 0));
+    dim3 dim_block(scene.width / tx + (scene.width % tx != 0),
+                   scene.height / ty + (scene.height % ty != 0));
     dim3 dim_thread(tx, ty);
 
     render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_u, d_v, d_center, d_cam_pos,  

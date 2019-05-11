@@ -1,5 +1,7 @@
 #include <algorithm>
+#ifdef __GNUC__
 #include <parallel/algorithm>
+#endif
 #include <iostream>
 #include <omp.h>
 
@@ -90,7 +92,11 @@ KdTree::KdNode::KdNode(iterator_v beg, iterator_v end)
     else
     {
         axis = get_longest_axis(box);
+#ifdef __GNUC__
+        __gnu_parallel::sort(beg, end, func[axis]);
+#else
         sort(beg, end, func[axis]);
+#endif
 
         const iterator_v med = beg + dist / 2;
 
