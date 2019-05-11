@@ -3,3 +3,4 @@ main
 *.max
 *.fbx
 *.ppm
+cmake-build*
