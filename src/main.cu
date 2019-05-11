@@ -58,8 +58,8 @@ __global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Vector *d_u, Vector *d
                        Vector *d_center, Vector *d_cam_pos, 
                        unsigned width, unsigned height)
 {
-    int i = blockDim.x * blockIdx.x + threadIdx.x;
-    int j = blockDim.y * blockIdx.y + threadIdx.y;
+    int j = blockDim.x * blockIdx.x + threadIdx.x;
+    int i = blockDim.y * blockIdx.y + threadIdx.y;
 
     if (i >= width || j >= height)
         return;
@@ -99,7 +99,6 @@ int main(int argc, char *argv[])
 
     if (argc > 2)
         out_file = argv[2];
-    //float t1 = omp_get_wtime();
 
     Scene scene = parse_scene(path_scene);
 
@@ -117,10 +116,13 @@ int main(int argc, char *argv[])
     for (const auto& name : scene.objs)
       obj_to_vertices(name, scene.mat_names, vertices, scene);
 
+    float t1 = omp_get_wtime();
     auto tree = KdTree(vertices.begin(), vertices.end());
     std::cout << tree.size() << std::endl;
 
     KdNodeGpu *d_tree = upload_kd_tree(tree);
+    float t2 = omp_get_wtime();
+    std::cout << "Time to build tree: " << t2 - t1 << "s\n";
 
     Vector *d_vect;
     Vector *d_u;
@@ -141,17 +143,22 @@ int main(int argc, char *argv[])
     cudaMemcpy(d_cam_pos, &scene.cam_pos, sizeof(struct Vector), cudaMemcpyHostToDevice);
 
     constexpr int tx = 8;
-    constexpr int ty = 8;
+    constexpr int ty = 4;
 
     dim3 dim_block(scene.width / tx + (scene.width % tx != 0),
                    scene.height / ty + (scene.height % ty != 0));
     dim3 dim_thread(tx, ty);
 
+    t1 = omp_get_wtime();
     render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_u, d_v, d_center, d_cam_pos,  
                                       scene.width, scene.height);
 
     cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(struct Vector), 
                cudaMemcpyDeviceToHost);
+
+    t2 = omp_get_wtime();
+    std::cout << "Time to ray tracer: " << t2 - t1 << "s\n";
+
 
     cudaFree(d_vect);
     cudaFree(d_u);

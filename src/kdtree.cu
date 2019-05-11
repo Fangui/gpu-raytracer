@@ -42,28 +42,31 @@ __device__ void search(struct KdNodeGpu *root, Ray &r, float *dist)
         KdNodeGpu *node = stack[--idx];
         if (is_inside(node->box, r))
         {
-            if (idx >= sizeof(stack) / sizeof(*stack))
-                return; // FIXME
 
-            bool has_left = (node->left != nullptr);
-            bool has_right = (node->right != nullptr);
+           // bool has_left = (node->left != nullptr);
+           // bool has_right = (node->right != nullptr);
 
             bool inter = false;
 
             for (Triangle_gpu *tri = node->beg; tri < node->end; ++tri)
             {
-                intersect(tri, &r, &inter);
-              //  printf("%f\n", tri->vertices[0]);
+                float t;
+                intersect(tri, &r, &t, &inter);
                 if (inter)
                 {
-                    *dist = 10; //FIXME
+                    if (*dist == -1 || *dist > t)
+                    {
+                        *dist = t;
+                        //r.tri = tri;
+                    }
                 }
             }
 
-            if (has_left)
+            if (node->left != nullptr)
+            {
                 stack[idx++] = node->left;
-            if (has_right)
                 stack[idx++] = node->right;
+            }
         }
     } while (idx);
 }

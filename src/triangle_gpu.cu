@@ -1,6 +1,6 @@
 #include "triangle_gpu.hh"
 
-__device__ void intersect(Triangle_gpu *d_tri, Ray *ray, bool *is_intersected)
+__device__ void intersect(Triangle_gpu *d_tri, Ray *ray, float *dist, bool *is_intersected)
 {
     *is_intersected = false;
 
@@ -33,7 +33,7 @@ __device__ void intersect(Triangle_gpu *d_tri, Ray *ray, bool *is_intersected)
     {
         ray->u = u;
         ray->v = v;
-        //dist = t;
+        *dist = t;
         *is_intersected = true;
     }
 }
