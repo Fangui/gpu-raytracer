@@ -54,7 +54,8 @@ int write_ppm(const std::string &out_path, Vector *vect,
     return 0;
 }
 
-__global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Vector *d_u, Vector *d_v, 
+__global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Material *d_materials,
+                       Vector *d_u, Vector *d_v, 
                        Vector *d_center, Vector *d_cam_pos, 
                        unsigned width, unsigned height)
 {
@@ -74,14 +75,7 @@ __global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Vector *d_u, Vector *d
     Ray ray(*d_cam_pos, dir);
 
     float dist = -1;
-    search(d_tree, ray, &dist);
-    if (dist == -1)
-        d_vect[i * height + j] = Vector(0.1, 0.1, 0.1); // cast ray
-    else
-    {
-        d_vect[i * height + j] = Vector(1, 0, 0);
-    }
-
+    d_vect[i * height + j] = direct_light(d_tree, ray, d_materials, &dist);
 }
 
 int main(int argc, char *argv[])
@@ -129,6 +123,11 @@ int main(int argc, char *argv[])
     Vector *d_v;
     Vector *d_center;
     Vector *d_cam_pos;
+    Material *d_materials;
+
+    cudaMalloc(&d_materials, scene.mat_names.size() * sizeof(Material));
+    cudaMemcpy(d_materials, scene.materials, 
+               scene.mat_names.size() * sizeof(Material), cudaMemcpyHostToDevice);
 
     cudaMalloc(&d_vect, scene.width * scene.height * sizeof(struct Vector)); // call wrapper
     cudaMalloc(&d_u, sizeof(struct Vector)); // call wrapper
@@ -150,7 +149,7 @@ int main(int argc, char *argv[])
     dim3 dim_thread(tx, ty);
 
     t1 = omp_get_wtime();
-    render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_u, d_v, d_center, d_cam_pos,  
+    render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, d_u, d_v, d_center, d_cam_pos,  
                                       scene.width, scene.height);
 
     cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(struct Vector), 

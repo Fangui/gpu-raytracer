@@ -54,7 +54,7 @@ struct Triangle
         return Vector(x / 3.f, y / 3.f, z / 3.f);
     }
 
-    bool intersect(Ray &ray, float &dist) const;
+    CUDA_HOSTDEV bool intersect(Ray &ray, float &dist) const;
     bool intersect(const Ray &ray) const;
 
     Vector vertices[3];

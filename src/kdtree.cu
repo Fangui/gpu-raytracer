@@ -1,4 +1,5 @@
 #include "kdtree_gpu.hh"
+#include "material.hh"
 
 __device__ bool is_inside(float *box, const Ray &ray)
 {
@@ -28,7 +29,8 @@ __device__ bool is_inside(float *box, const Ray &ray)
 }
 
 #include <stdio.h>
-__device__ void search(struct KdNodeGpu *root, Ray &r, float *dist)
+__device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, 
+                                 Material *materials, float *dist)
 {
     // if inside box 
 
@@ -42,22 +44,15 @@ __device__ void search(struct KdNodeGpu *root, Ray &r, float *dist)
         KdNodeGpu *node = stack[--idx];
         if (is_inside(node->box, r))
         {
-
-           // bool has_left = (node->left != nullptr);
-           // bool has_right = (node->right != nullptr);
-
-            bool inter = false;
-
-            for (Triangle_gpu *tri = node->beg; tri < node->end; ++tri)
+            for (Triangle *tri = node->beg; tri < node->end; ++tri)
             {
                 float t;
-                intersect(tri, &r, &t, &inter);
-                if (inter)
+                if (tri->intersect(r, t))
                 {
                     if (*dist == -1 || *dist > t)
                     {
                         *dist = t;
-                        //r.tri = tri;
+                        r.tri = *tri;
                     }
                 }
             }
@@ -69,4 +64,8 @@ __device__ void search(struct KdNodeGpu *root, Ray &r, float *dist)
             }
         }
     } while (idx);
+
+    if (*dist != -1)
+        return materials[r.tri.id].kd;
+    return Vector(0, 0, 0);
 }

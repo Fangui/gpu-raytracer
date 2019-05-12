@@ -34,6 +34,7 @@ struct Scene
     std::vector<std::string> emissive_name;
 
     std::vector<std::string> mat_names;
+    Material *materials;
     std::unordered_map<std::string, Material> map;
     std::unordered_map<std::string, Texture> map_text;
 };

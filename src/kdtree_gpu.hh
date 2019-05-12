@@ -1,4 +1,6 @@
-#include "triangle_gpu.hh"
+#pragma once
+
+#include "triangle.hh"
 
 struct KdNodeGpu
 {
@@ -7,8 +9,11 @@ struct KdNodeGpu
 
     float box[6];
 
-    Triangle_gpu *beg;
-    Triangle_gpu *end;
+    Triangle *beg;
+    Triangle *end;
 };
 
-__device__ void search(struct KdNodeGpu *root, Ray &r, float *dist);
+struct Material;
+
+__device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, Material *materials,
+                       float *dist);

@@ -246,7 +246,6 @@ void parse_materials(const std::string &s, Scene &scene)
                 }
             }
 
-
         }
     }
 
@@ -274,6 +273,7 @@ void obj_to_vertices(const std::string &s, const std::vector<std::string> &mat_n
     unsigned cur_idx = 0;
 
     std::unordered_set<std::string> set_material;
+    scene.materials = new Material[mat_names.size()];
 
     while (std::getline(in, line))
     {
@@ -360,6 +360,12 @@ void obj_to_vertices(const std::string &s, const std::vector<std::string> &mat_n
                            vt[idx[1]], vt[idx[4]], vt[idx[7]],
                            vn[idx[2]], vn[idx[5]], vn[idx[8]], cur_idx);
                 v_tri.push_back(t);
+                
+                auto m = scene.map.find(mat_names[cur_idx]);
+                if (m != scene.map.end())
+                    scene.materials[cur_idx] = m->second;
+                else
+                    std::cout << "Error " << std::endl;
             }
         }
     }

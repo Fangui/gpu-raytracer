@@ -4,7 +4,6 @@ extern "C" {
 
 #include "kdtree.hh"
 #include "kdtree_gpu.hh"
-#include "triangle_gpu.hh"
 
 #define cudaCheckError(ans) gpuAssert((ans), __FILE__, __LINE__)
 static inline void gpuAssert(cudaError_t code, const char *file, int line)
@@ -13,12 +12,6 @@ static inline void gpuAssert(cudaError_t code, const char *file, int line)
         return;
     fprintf(stderr, "CUDA: %s %s %d\n", cudaGetErrorString(code), file, line);
     exit(code);
-}
-
-__global__ void print(KdNodeGpu *node)
-{
-    Vector vert = node->beg->vertices[0];
-    printf("%f %f %f\n", vert[0], vert[1], vert[2]);
 }
 
 static KdNodeGpu* upload_kd_node(const KdTree::childPtr& kd_node)
@@ -31,19 +24,16 @@ static KdNodeGpu* upload_kd_node(const KdTree::childPtr& kd_node)
     node.right = upload_kd_node(kd_node->right);
     memcpy(node.box, kd_node->box, sizeof(node.box));
     auto len = std::distance(kd_node->beg, kd_node->end);
-    cudaCheckError(cudaMalloc(&node.beg, sizeof(Triangle_gpu) * len));
+    cudaCheckError(cudaMalloc(&node.beg, sizeof(Triangle) * len));
     node.end = node.beg + len;
     // Trick to get first elem address: we know a contiguous vector is hidden behind node->beg
     auto& first = *kd_node->beg;
 
-    cudaCheckError(cudaMemcpy(node.beg, &first, sizeof(Triangle_gpu) * len, cudaMemcpyHostToDevice));
+    cudaCheckError(cudaMemcpy(node.beg, &first, sizeof(Triangle) * len, cudaMemcpyHostToDevice));
 
     KdNodeGpu* node_gpu;
     cudaCheckError(cudaMalloc(&node_gpu, sizeof(*node_gpu)));
     cudaCheckError(cudaMemcpy(node_gpu, &node, sizeof(node), cudaMemcpyHostToDevice));
-
-    //std::cout << kd_node.get()->beg->vertices[0] << std::endl;
-    //print<<<1, 1>>>(node_gpu);
 
     return node_gpu;
 }

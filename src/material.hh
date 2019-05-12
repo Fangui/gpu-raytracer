@@ -4,6 +4,7 @@
 
 struct Material
 {
+    Material() = default;
     Material(float ns, Vector &ka, Vector &kd, Vector &ks,
              Vector &ke, float ni, float d, int illum, Vector &tf,
              const std::string &kd_name,
