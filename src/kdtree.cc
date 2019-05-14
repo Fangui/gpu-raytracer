@@ -75,10 +75,10 @@ static unsigned get_longest_axis(float box[6])
 
 KdTree::KdTree(iterator_v beg, iterator_v end)
 {
-    root_ = make_child(beg, end);
+    root_ = make_child(nodes_count_, beg, end);
 }
 
-KdTree::KdNode::KdNode(iterator_v beg, iterator_v end)
+KdTree::KdNode::KdNode(std::size_t& nodes_count, iterator_v beg, iterator_v end)
 {
     unsigned dist = std::distance(beg, end);
     get_extremum(box, beg, end);
@@ -100,8 +100,8 @@ KdTree::KdNode::KdNode(iterator_v beg, iterator_v end)
 
         const iterator_v med = beg + dist / 2;
 
-        left = make_child(beg, med);
-        right = make_child(med + 1, end);
+        left = make_child(nodes_count, beg, med);
+        right = make_child(nodes_count, med + 1, end);
 
         this->beg = med;
         this->end = med + 1;
