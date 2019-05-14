@@ -55,7 +55,7 @@ int write_ppm(const std::string &out_path, Vector *vect,
 }
 
 __global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Material *d_materials,
-                       Vector *d_u, Vector *d_v, 
+                       Vector *a_light, Light *d_lights, size_t d_lights_len, Vector *d_u, Vector *d_v, 
                        Vector *d_center, Vector *d_cam_pos, 
                        unsigned width, unsigned height)
 {
@@ -74,8 +74,7 @@ __global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Material *d_materials,
     Vector dir = (o - *d_cam_pos).norm_inplace();
     Ray ray(*d_cam_pos, dir);
 
-    float dist = -1;
-    d_vect[i * height + j] = direct_light(d_tree, ray, d_materials, &dist);
+    d_vect[i * height + j] = direct_light(d_tree, ray, d_materials, a_light, d_lights, d_lights_len);
 }
 
 int main(int argc, char *argv[])
@@ -124,6 +123,8 @@ int main(int argc, char *argv[])
     Vector *d_center;
     Vector *d_cam_pos;
     Material *d_materials;
+    Vector *a_light;
+    Light *d_lights;
 
     cudaMalloc(&d_materials, scene.mat_names.size() * sizeof(Material));
     cudaMemcpy(d_materials, scene.materials, 
@@ -135,6 +136,12 @@ int main(int argc, char *argv[])
     cudaMalloc(&d_center, sizeof(struct Vector)); // call wrapper
     cudaMalloc(&d_cam_pos, sizeof(struct Vector)); // call wrapper
     Vector *vect = new Vector[scene.width * scene.height];
+
+    cudaMalloc(&a_light, sizeof(Vector));
+    cudaMemcpy(a_light, &scene.a_light, sizeof(Vector), cudaMemcpyHostToDevice);
+
+    cudaMalloc(&d_lights, sizeof(Light) * scene.lights.size());
+    cudaMemcpy(d_lights, scene.lights.data(), sizeof(Light) * scene.lights.size(), cudaMemcpyHostToDevice);
 
     cudaMemcpy(d_u, &u_n, sizeof(struct Vector), cudaMemcpyHostToDevice);
     cudaMemcpy(d_v, &v_n, sizeof(struct Vector), cudaMemcpyHostToDevice);
@@ -149,7 +156,7 @@ int main(int argc, char *argv[])
     dim3 dim_thread(tx, ty);
 
     t1 = omp_get_wtime();
-    render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, d_u, d_v, d_center, d_cam_pos,  
+    render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, a_light, d_lights, scene.lights.size(), d_u, d_v, d_center, d_cam_pos,
                                       scene.width, scene.height);
 
     cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(struct Vector), 

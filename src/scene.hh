@@ -12,12 +12,6 @@
 
 struct Scene
 {
-    ~Scene()
-    {
-        for (unsigned i = 0; i < lights.size(); ++i)
-            delete lights[i];
-    }
-
     int height;
     int width;
     Vector cam_pos;
@@ -28,7 +22,7 @@ struct Scene
     std::vector<std::string> mtls;
     Vector a_light;
     Matrix transform;
-    std::vector<Light*> lights;
+    std::vector<Light> lights;
     std::vector<Object> objects;
     std::vector<Vector> emissive; // coord of emmisive lights
     std::vector<std::string> emissive_name;

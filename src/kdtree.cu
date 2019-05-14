@@ -1,4 +1,5 @@
 #include "kdtree_gpu.hh"
+#include "light.hh"
 #include "material.hh"
 
 __device__ bool is_inside(float *box, const Ray &ray)
@@ -29,8 +30,8 @@ __device__ bool is_inside(float *box, const Ray &ray)
 }
 
 #include <stdio.h>
-__device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, 
-                                 Material *materials, float *dist)
+__device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, Material *materials,
+                               Vector *a_light, Light *d_lights, std::size_t d_lights_len)
 {
     // if inside box 
 
@@ -38,6 +39,8 @@ __device__ Vector direct_light(struct KdNodeGpu *root, Ray &r,
     stack[0] = root;
 
     size_t idx = 1;
+
+    float dist = -1;
 
     do
     {
@@ -49,9 +52,9 @@ __device__ Vector direct_light(struct KdNodeGpu *root, Ray &r,
                 float t;
                 if (tri->intersect(r, t))
                 {
-                    if (*dist == -1 || *dist > t)
+                    if (dist == -1 || dist > t)
                     {
-                        *dist = t;
+                        dist = t;
                         r.tri = *tri;
                     }
                 }
@@ -65,7 +68,20 @@ __device__ Vector direct_light(struct KdNodeGpu *root, Ray &r,
         }
     } while (idx);
 
-    if (*dist != -1)
-        return materials[r.tri.id].kd;
+    Vector intersection = r.o + dist * r.dir;
+
+    if (dist != -1)
+    {
+        Vector light = *a_light;
+        for (std::size_t i = 0; i < d_lights_len; ++i)
+        {
+            auto contrib = (d_lights[i].dir * -1).dot_product(r.tri.normal[0]);
+            if (contrib > 0)
+            {
+                light += d_lights[i].color * contrib;
+            }
+        }
+        return light * materials[r.tri.id].kd;
+    }
     return Vector(0, 0, 0);
 }
