@@ -366,7 +366,7 @@ void obj_to_vertices(const std::string &s, const std::vector<std::string> &mat_n
     }
 }
 
-int write_ppm(const std::string &out_path, const Vector *vect,
+int write_ppm(const std::string &out_path, const Pixel *pix,
         int width, int height)
 {
     std::ofstream out (out_path);
@@ -381,13 +381,10 @@ int write_ppm(const std::string &out_path, const Vector *vect,
         {
             for (int j = 0; j < height; ++j)
             {
-                int r = vect[index][0] * 255.0;
-                int g = vect[index][1] * 255.0;
-                int b = vect[index++][2] * 255.0;
+                int r = pix[index].x;
+                int g = pix[index].y;
+                int b = pix[index++].z;
 
-                r = std::min(r, 255);
-                g = std::min(g, 255);
-                b = std::min(b, 255);
                 out << r << " " << g << " " << b << "  ";
             }
             out << '\n';

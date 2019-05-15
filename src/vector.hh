@@ -72,3 +72,19 @@ public:
 
 CUDA_HOSTDEV Vector operator/(float lambda, const Vector &v);
 CUDA_HOSTDEV Vector operator*(float lambda, const Vector &v);
+
+struct Pixel
+{
+    Pixel() = default;
+    CUDA_HOSTDEV Pixel(uint8_t x, uint8_t y, uint8_t z) : x(x), y(y), z(z) {}
+    CUDA_HOSTDEV Pixel(const Vector &vect)
+    {
+        x = fminf(vect[0], 1.f) * 255;
+        y = fminf(vect[1], 1.f) * 255;
+        z = fminf(vect[2], 1.f) * 255;
+    }
+
+    uint8_t x;
+    uint8_t y;
+    uint8_t z;
+};

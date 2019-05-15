@@ -1,13 +1,16 @@
 #include <fstream>
 #include <vector>
 #include <omp.h>
+#include <chrono>
 
 #include "parse.hh"
 #include "vector.hh"
 #include "device.hh"
 
-__global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Material *d_materials,
-                       Vector *a_light, Light *d_lights, size_t d_lights_len, Vector *d_u, Vector *d_v, 
+using namespace std::chrono;
+
+__global__ void render(Pixel *d_vect, KdNodeGpu *d_tree, Material *d_materials,
+                       Vector *a_light, Light *d_lights, size_t d_lights_len, Vector *d_u, Vector *d_v,
                        Vector *d_center, Vector *d_cam_pos, 
                        unsigned width, unsigned height)
 {
@@ -52,24 +55,23 @@ int main(int argc, char *argv[])
     Vector w = v_n.cross_product(u_n);
 
     float val = tan(scene.fov * M_PI / 360);
-    val = val == 0.0 ? 0.0001 : val;
-    float L = scene.width / 2;
-    L /= val; 
-    Vector center = scene.cam_pos + (w * L); // center
+    float l = scene.width / 2;
+    l /= val;
+    Vector center = scene.cam_pos + (w * l); // center
 
     std::vector<Triangle> vertices;
     for (const auto& name : scene.objs)
       obj_to_vertices(name, scene.mat_names, vertices, scene);
 
-    float t1 = omp_get_wtime();
+    auto t1 = high_resolution_clock::now();
     auto tree = KdTree(vertices.begin(), vertices.end());
     std::cout << tree.size() << std::endl;
 
     KdNodeGpu *d_tree = upload_kd_tree(tree, vertices);
-    float t2 = omp_get_wtime();
-    std::cout << "Time to build tree: " << t2 - t1 << "s\n";
+    auto t2 = high_resolution_clock::now();
+    std::cout << "Time to build tree: " << duration_cast<duration<double>>(t2 - t1).count()  << "s\n";
 
-    Vector *d_vect;
+    Pixel *d_vect;
     Vector *d_u;
     Vector *d_v;
     Vector *d_center;
@@ -82,12 +84,12 @@ int main(int argc, char *argv[])
    cudaCheckError(cudaMemcpy(d_materials, scene.materials, 
                scene.mat_names.size() * sizeof(Material), cudaMemcpyHostToDevice));
 
-   cudaCheckError(cudaMalloc(&d_vect, scene.width * scene.height * sizeof(struct Vector)));
+   cudaCheckError(cudaMalloc(&d_vect, scene.width * scene.height * sizeof(*d_vect)));
    cudaCheckError(cudaMalloc(&d_u, sizeof(struct Vector)));
    cudaCheckError(cudaMalloc(&d_v, sizeof(struct Vector)));
    cudaCheckError(cudaMalloc(&d_center, sizeof(struct Vector)));
    cudaCheckError(cudaMalloc(&d_cam_pos, sizeof(struct Vector)));
-    Vector *vect = new Vector[scene.width * scene.height];
+   Pixel *vect = new Pixel[scene.width * scene.height];
 
    cudaCheckError(cudaMalloc(&a_light, sizeof(Vector)));
    cudaCheckError(cudaMemcpy(a_light, &scene.a_light, sizeof(Vector), cudaMemcpyHostToDevice));
@@ -109,23 +111,27 @@ int main(int argc, char *argv[])
                    scene.height / ty + (scene.height % ty != 0));
     dim3 dim_thread(tx, ty);
 
-    t1 = omp_get_wtime();
+    t1 = high_resolution_clock::now();
     render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, a_light, d_lights, scene.lights.size(), d_u, d_v, d_center, d_cam_pos,
                                       scene.width, scene.height);
 
-   cudaCheckError(cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(struct Vector), 
-                  cudaMemcpyDeviceToHost));
+    t2 = high_resolution_clock::now();
+    std::cout << "Time to ray tracer: " << duration_cast<duration<double>>(t2 - t1).count() << "s\n";
+    cudaCheckError(cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(*d_vect),
+                   cudaMemcpyDeviceToHost));
+    auto t3 = high_resolution_clock::now();
 
-    t2 = omp_get_wtime();
-    std::cout << "Time to ray tracer: " << t2 - t1 << "s\n";
+    std::cout << "Time to memcpy: " << duration_cast<duration<double>>(t3 - t2).count() << "s\n";
 
-
+    cudaFree(d_materials);
+    cudaFree(a_light);
+    cudaFree(d_lights);
     cudaFree(d_vect);
     cudaFree(d_u);
     cudaFree(d_v);
     cudaFree(d_center);
     cudaFree(d_cam_pos);
-    
+
     write_ppm(out_file + ".ppm", vect, scene.width, scene.height);
     delete[] vect;
 }

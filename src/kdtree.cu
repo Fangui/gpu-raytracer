@@ -31,7 +31,7 @@ __device__ bool is_inside(float *box, const Ray &ray)
     return !(tmin > tzmax || tzmin > tmax);
 }
 
-__device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, Material *materials,
+__device__ Pixel direct_light(struct KdNodeGpu *root, Ray &r, Material *materials,
                                Vector *a_light, Light *d_lights, size_t d_lights_len)
 {
     KdNodeGpu *stack[64];
@@ -75,7 +75,9 @@ __device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, Material *materia
             if (contrib > 0)
                 light += d_lights[i].color * contrib;
         }
-        return light * materials[r.tri.id].kd;
+        light *= materials[r.tri.id].kd;
+        auto pix = Pixel(light);
+        return pix;
     }
-    return Vector(0, 0, 0);
+    return Pixel(0, 0, 0);
 }

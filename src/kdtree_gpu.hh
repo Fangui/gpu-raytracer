@@ -16,5 +16,5 @@ struct KdNodeGpu
 struct Material;
 struct Light;
 
-__device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, Material *materials,
+__device__ Pixel direct_light(struct KdNodeGpu *root, Ray &r, Material *materials,
                                Vector *a_light, Light *d_lights, std::size_t d_lights_len);
