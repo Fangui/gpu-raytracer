@@ -92,7 +92,7 @@ KdTree::KdNode::KdNode(std::size_t& nodes_count, iterator_v beg, iterator_v end)
         sort(beg, end, func[axis]);
 #endif
 
-        const iterator_v med = beg + dist / 2;
+        const iterator_v med = beg + ceil((float)dist / 2.f);
 
         left = make_child(nodes_count, beg, med);
         right = make_child(nodes_count, med + 1, end);

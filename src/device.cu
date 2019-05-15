@@ -1,11 +1,8 @@
-extern "C" {
 #include <stdio.h>
-}
 
 #include "device.hh"
 
-#define cudaCheckError(ans) gpuAssert((ans), __FILE__, __LINE__)
-static inline void gpuAssert(cudaError_t code, const char *file, int line)
+void gpuAssert(cudaError_t code, const char *file, int line)
 {
     if (code == cudaSuccess)
         return;

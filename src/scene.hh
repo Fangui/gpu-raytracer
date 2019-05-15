@@ -4,7 +4,6 @@
 #include "material.hh"
 #include "matrix.hh"
 #include "object.hh"
-#include "sphere_light.hh"
 #include "texture.hh"
 
 #include <vector>

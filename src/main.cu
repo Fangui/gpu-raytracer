@@ -1,14 +1,3 @@
-/*
-#include <algorithm>
-#include <iostream>
-#include <vector>
-#include <unordered_map>
-
-#include "compute_light.hh"
-#include "kdtree.hh"
-#include "vector.hh"
-*/
-
 #include <fstream>
 #include <vector>
 #include <omp.h>
@@ -16,43 +5,6 @@
 #include "parse.hh"
 #include "vector.hh"
 #include "device.hh"
-
-int write_ppm(const std::string &out_path, Vector *vect,
-        int width, int height)
-{
-    std::ofstream out (out_path);
-    unsigned index = 0;
-
-    if (out.is_open())
-    {
-        out << "P3\n";
-        out << width << " " << height << '\n';
-        out << 255 << '\n';
-
-        for (int j = 0; j < height; ++j)
-        {
-            for (int i = 0; i < width; ++i)
-            {
-                int r = vect[index][0] * 255.0;
-                int g = vect[index][1] * 255.0;
-                int b = vect[index++][2] * 255.0;
-
-                r = std::min(r, 255);
-                g = std::min(g, 255);
-                b = std::min(b, 255);
-                out << r << " " << g << " " << b << "  ";
-            }
-            out << '\n';
-        }
-        std::cout << "Create " + out_path + " file\n";
-    }
-    else
-    {
-        std::cerr << "Error while write in " << out_path << '\n';
-        return 1;
-    }
-    return 0;
-}
 
 __global__ void render(Vector *d_vect, KdNodeGpu *d_tree, Material *d_materials,
                        Vector *a_light, Light *d_lights, size_t d_lights_len, Vector *d_u, Vector *d_v, 
@@ -126,27 +78,29 @@ int main(int argc, char *argv[])
     Vector *a_light;
     Light *d_lights;
 
-    cudaMalloc(&d_materials, scene.mat_names.size() * sizeof(Material));
-    cudaMemcpy(d_materials, scene.materials, 
-               scene.mat_names.size() * sizeof(Material), cudaMemcpyHostToDevice);
+   cudaCheckError(cudaMalloc(&d_materials, scene.mat_names.size() * sizeof(Material)));
+   cudaCheckError(cudaMemcpy(d_materials, scene.materials, 
+               scene.mat_names.size() * sizeof(Material), cudaMemcpyHostToDevice));
 
-    cudaMalloc(&d_vect, scene.width * scene.height * sizeof(struct Vector)); // call wrapper
-    cudaMalloc(&d_u, sizeof(struct Vector)); // call wrapper
-    cudaMalloc(&d_v, sizeof(struct Vector)); // call wrapper
-    cudaMalloc(&d_center, sizeof(struct Vector)); // call wrapper
-    cudaMalloc(&d_cam_pos, sizeof(struct Vector)); // call wrapper
+   cudaCheckError(cudaMalloc(&d_vect, scene.width * scene.height * sizeof(struct Vector)));
+   cudaCheckError(cudaMalloc(&d_u, sizeof(struct Vector)));
+   cudaCheckError(cudaMalloc(&d_v, sizeof(struct Vector)));
+   cudaCheckError(cudaMalloc(&d_center, sizeof(struct Vector)));
+   cudaCheckError(cudaMalloc(&d_cam_pos, sizeof(struct Vector)));
     Vector *vect = new Vector[scene.width * scene.height];
 
-    cudaMalloc(&a_light, sizeof(Vector));
-    cudaMemcpy(a_light, &scene.a_light, sizeof(Vector), cudaMemcpyHostToDevice);
+   cudaCheckError(cudaMalloc(&a_light, sizeof(Vector)));
+   cudaCheckError(cudaMemcpy(a_light, &scene.a_light, sizeof(Vector), cudaMemcpyHostToDevice));
 
-    cudaMalloc(&d_lights, sizeof(Light) * scene.lights.size());
-    cudaMemcpy(d_lights, scene.lights.data(), sizeof(Light) * scene.lights.size(), cudaMemcpyHostToDevice);
+   cudaCheckError(cudaMalloc(&d_lights, sizeof(Light) * scene.lights.size()));
+   cudaCheckError(cudaMemcpy(d_lights, scene.lights.data(), 
+                  sizeof(Light) * scene.lights.size(), cudaMemcpyHostToDevice));
 
-    cudaMemcpy(d_u, &u_n, sizeof(struct Vector), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_v, &v_n, sizeof(struct Vector), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_center, &center, sizeof(struct Vector), cudaMemcpyHostToDevice);
-    cudaMemcpy(d_cam_pos, &scene.cam_pos, sizeof(struct Vector), cudaMemcpyHostToDevice);
+   cudaCheckError(cudaMemcpy(d_u, &u_n, sizeof(struct Vector), cudaMemcpyHostToDevice));
+   cudaCheckError(cudaMemcpy(d_v, &v_n, sizeof(struct Vector), cudaMemcpyHostToDevice));
+   cudaCheckError(cudaMemcpy(d_center, &center, sizeof(struct Vector), cudaMemcpyHostToDevice));
+   cudaCheckError(cudaMemcpy(d_cam_pos, &scene.cam_pos, 
+                             sizeof(struct Vector), cudaMemcpyHostToDevice));
 
     constexpr int tx = 4;
     constexpr int ty = 8;
@@ -159,8 +113,8 @@ int main(int argc, char *argv[])
     render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, a_light, d_lights, scene.lights.size(), d_u, d_v, d_center, d_cam_pos,
                                       scene.width, scene.height);
 
-    cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(struct Vector), 
-               cudaMemcpyDeviceToHost);
+   cudaCheckError(cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(struct Vector), 
+                  cudaMemcpyDeviceToHost));
 
     t2 = omp_get_wtime();
     std::cout << "Time to ray tracer: " << t2 - t1 << "s\n";
@@ -174,46 +128,4 @@ int main(int argc, char *argv[])
     
     write_ppm(out_file + ".ppm", vect, scene.width, scene.height);
     delete[] vect;
-
-    /*
-    // distance between camera and center of screen
-
-
-
-    std::vector<Vector> vect(scene.width * scene.height);
-
-
-    t1 = omp_get_wtime();
-
-    t2 = omp_get_wtime();
-    std::cout << "Time raytracing: " << t2 - t1 << "s\n";
-
-    
-    write_ppm(out_file + ".ppm", vect, scene.width, scene.height);
-    float t4 = omp_get_wtime(); */
-    /*
-    std::vector<Vector> out;
-
-    for (int i = 0; i < scene.width; i += 2)
-    {
-        for (int j = 0; j < scene.height; j += 2)
-        {
-            Vector c = (vect[i * scene.width + j]
-                      + vect[i * scene.width + j + 1]
-                      + vect[(i + 1) * scene.height + j]
-                      + vect[(i + 1) * scene.height + j + 1]) / 4;
-
-            out.push_back(c);
-        }
-    }*/
-
-    /*
-    std::vector<Vector> res;
-
-    float t3 = omp_get_wtime();
-    std::cout << "Time applying denoise: " << t3 - t4 << "s\n";
-
-    //return write_ppm("out.ppm", out, scene.width / 2, scene.height / 2);
-    return write_ppm(out_file + "_denoise.ppm", res, scene.width, scene.height);
-    */
 }

@@ -31,7 +31,6 @@ __device__ bool is_inside(float *box, const Ray &ray)
     return !(tmin > tzmax || tzmin > tmax);
 }
 
-#include <stdio.h>
 __device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, Material *materials,
                                Vector *a_light, Light *d_lights, size_t d_lights_len)
 {
