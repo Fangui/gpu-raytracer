@@ -14,12 +14,6 @@ const std::function<bool (Triangle, Triangle)> func[3] =
     [](Triangle a, Triangle b) { return a.get_mean()[2] < b.get_mean()[2]; }
 };
 
-#define GET_MIN_MAX(idx, coord) \
-    if (box[idx] > beg->vertices[i][coord]) \
-        box[idx] = beg->vertices[i][coord]; \
-    if (box[idx + 1] < beg->vertices[i][coord]) \
-        box[idx + 1] = beg->vertices[i][coord];
-
 static void get_extremum(float box[6], iterator_v beg,
                                        iterator_v end)
 {
@@ -50,9 +44,9 @@ static void get_extremum(float box[6], iterator_v beg,
     }
 
     for (unsigned i = 0; i < 6; i += 2) // expand bounding box
-        box[i] -= 0.1;
+        box[i] -= 0.01;
     for (unsigned i = 1; i < 6; i += 2)
-        box[i] += 0.1;
+        box[i] += 0.01;
 }
 
 static unsigned get_longest_axis(float box[6])
@@ -69,20 +63,20 @@ static unsigned get_longest_axis(float box[6])
     }
     if (diff_y > diff_z)
         return 1;
-    
+
     return 2;
 }
 
 KdTree::KdTree(iterator_v beg, iterator_v end)
 {
-    root_ = make_child(beg, end);
+    root_ = make_child(nodes_count_, beg, end);
 }
 
-KdTree::KdNode::KdNode(iterator_v beg, iterator_v end)
+KdTree::KdNode::KdNode(std::size_t& nodes_count, iterator_v beg, iterator_v end)
 {
     unsigned dist = std::distance(beg, end);
     get_extremum(box, beg, end);
-    if (dist < 4)
+    if (dist < 3)
     {
         this->beg = beg;
         this->end = end;
@@ -100,8 +94,8 @@ KdTree::KdNode::KdNode(iterator_v beg, iterator_v end)
 
         const iterator_v med = beg + dist / 2;
 
-        left = make_child(beg, med);
-        right = make_child(med + 1, end);
+        left = make_child(nodes_count, beg, med);
+        right = make_child(nodes_count, med + 1, end);
 
         this->beg = med;
         this->end = med + 1;

@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
     auto tree = KdTree(vertices.begin(), vertices.end());
     std::cout << tree.size() << std::endl;
 
-    KdNodeGpu *d_tree = upload_kd_tree(tree);
+    KdNodeGpu *d_tree = upload_kd_tree(tree, vertices);
     float t2 = omp_get_wtime();
     std::cout << "Time to build tree: " << t2 - t1 << "s\n";
 
@@ -148,8 +148,8 @@ int main(int argc, char *argv[])
     cudaMemcpy(d_center, &center, sizeof(struct Vector), cudaMemcpyHostToDevice);
     cudaMemcpy(d_cam_pos, &scene.cam_pos, sizeof(struct Vector), cudaMemcpyHostToDevice);
 
-    constexpr int tx = 8;
-    constexpr int ty = 4;
+    constexpr int tx = 4;
+    constexpr int ty = 8;
 
     dim3 dim_block(scene.width / tx + (scene.width % tx != 0),
                    scene.height / ty + (scene.height % ty != 0));

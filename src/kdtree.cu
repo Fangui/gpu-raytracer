@@ -23,23 +23,22 @@ __device__ bool is_inside(float *box, const Ray &ray)
     float tzmin = (box[4 + ray.sign[2]] - origin[2]) * ray.inv[2];
     float tzmax = (box[5 - ray.sign[2]] - origin[2]) * ray.inv[2];
 
+    /*
     if (tmin > tzmax || tzmin > tmax)
         return false;
 
-    return true;
+    return true;*/
+    return !(tmin > tzmax || tzmin > tmax);
 }
 
 #include <stdio.h>
 __device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, Material *materials,
-                               Vector *a_light, Light *d_lights, std::size_t d_lights_len)
+                               Vector *a_light, Light *d_lights, size_t d_lights_len)
 {
-    // if inside box 
-
     KdNodeGpu *stack[64];
     stack[0] = root;
 
     size_t idx = 1;
-
     float dist = -1;
 
     do
@@ -68,18 +67,14 @@ __device__ Vector direct_light(struct KdNodeGpu *root, Ray &r, Material *materia
         }
     } while (idx);
 
-    Vector intersection = r.o + dist * r.dir;
-
     if (dist != -1)
     {
         Vector light = *a_light;
-        for (std::size_t i = 0; i < d_lights_len; ++i)
+        for (size_t i = 0; i < d_lights_len; ++i)
         {
             auto contrib = (d_lights[i].dir * -1).dot_product(r.tri.normal[0]);
             if (contrib > 0)
-            {
                 light += d_lights[i].color * contrib;
-            }
         }
         return light * materials[r.tri.id].kd;
     }

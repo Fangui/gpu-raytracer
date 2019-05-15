@@ -14,7 +14,7 @@ public:
     struct KdNode
     {
         KdNode();
-        KdNode(iterator_v beg, iterator_v end);
+        KdNode(std::size_t& nodes_count, iterator_v beg, iterator_v end);
 
         std::unique_ptr<KdNode> left;
         std::unique_ptr<KdNode> right;
@@ -97,15 +97,17 @@ public:
     }
 
     childPtr root_;
+    std::size_t nodes_count_ = 0;
 private:
     static inline auto make_child()
     {
         return std::make_unique<KdNode>();
     }
 
-    static inline auto make_child(iterator_v beg, iterator_v end)
+    static inline auto make_child(std::size_t& nodes_count, iterator_v beg, iterator_v end)
     {
-        return std::make_unique<KdNode>(beg, end);
+        ++nodes_count;
+        return std::make_unique<KdNode>(nodes_count, beg, end);
     }
 
 };

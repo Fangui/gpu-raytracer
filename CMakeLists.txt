@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang|GNU")
     message("Clang or G++ detected, enabling optimizations")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -march=native -fno-trapping-math -fno-signed-zeros")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Ofast -march=native -fno-trapping-math -fno-signed-zeros -flto")
 endif()
 
 find_package(OpenMP)

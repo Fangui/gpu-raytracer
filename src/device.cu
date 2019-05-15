@@ -2,8 +2,7 @@ extern "C" {
 #include <stdio.h>
 }
 
-#include "kdtree.hh"
-#include "kdtree_gpu.hh"
+#include "device.hh"
 
 #define cudaCheckError(ans) gpuAssert((ans), __FILE__, __LINE__)
 static inline void gpuAssert(cudaError_t code, const char *file, int line)
@@ -14,37 +13,60 @@ static inline void gpuAssert(cudaError_t code, const char *file, int line)
     exit(code);
 }
 
-static KdNodeGpu* upload_kd_node(const KdTree::childPtr& kd_node)
+static size_t upload_kd_node(KdNodeGpu* nodes, KdNodeGpu* nodes_gpu, 
+                             std::vector<Triangle>& triangles, Triangle* triangles_gpu,
+                             const KdTree::childPtr& kd_node, std::size_t& idx)
 {
     if (!kd_node)
-        return NULL;
+        return 0;
 
-    KdNodeGpu node;
-    node.left = upload_kd_node(kd_node->left);
-    node.right = upload_kd_node(kd_node->right);
+    size_t cur_idx = idx;
+
+    KdNodeGpu &node = nodes[idx++];
+
+    size_t left_idx = upload_kd_node(nodes, nodes_gpu, triangles,
+                                     triangles_gpu, kd_node->left, idx);
+
+    if (left_idx)
+        node.left = nodes_gpu + left_idx;
+    else
+        node.left = nullptr;
+
+    size_t right_idx = upload_kd_node(nodes, nodes_gpu, triangles,
+                                     triangles_gpu, kd_node->right, idx);
+
+    if (right_idx)
+        node.right = nodes_gpu + right_idx;
+    else
+        node.right = nullptr;
+
     memcpy(node.box, kd_node->box, sizeof(node.box));
-    auto len = std::distance(kd_node->beg, kd_node->end);
-    cudaCheckError(cudaMalloc(&node.beg, sizeof(Triangle) * len));
+
+    size_t len = kd_node->end - kd_node->beg;
+    size_t offset = &(*kd_node->beg) - triangles.data();
+
+    node.beg = triangles_gpu + offset;
     node.end = node.beg + len;
-    // Trick to get first elem address: we know a contiguous vector is hidden behind node->beg
-    auto& first = *kd_node->beg;
 
-    cudaCheckError(cudaMemcpy(node.beg, &first, sizeof(Triangle) * len, cudaMemcpyHostToDevice));
-
-    KdNodeGpu* node_gpu;
-    cudaCheckError(cudaMalloc(&node_gpu, sizeof(*node_gpu)));
-    cudaCheckError(cudaMemcpy(node_gpu, &node, sizeof(node), cudaMemcpyHostToDevice));
-
-    return node_gpu;
+    return cur_idx;
 }
 
-KdNodeGpu* upload_kd_tree(const KdTree& kd_tree)
+KdNodeGpu* upload_kd_tree(const KdTree& kd_tree, std::vector<Triangle>& triangles)
 {
-    return upload_kd_node(kd_tree.root_);
-}
+    std::vector<KdNodeGpu> nodes(kd_tree.nodes_count_);
+    KdNodeGpu* nodes_gpu;
+    cudaCheckError(cudaMalloc(&nodes_gpu, sizeof(*nodes_gpu) * nodes.size()));
+    Triangle* triangles_gpu;
+    cudaCheckError(cudaMalloc(&triangles_gpu, sizeof(*triangles_gpu) * triangles.size()));
+    size_t idx = 0;
 
-void device_raytracing(const KdTree& kd_tree)
-{
-    KdNodeGpu* kd_tree_root = upload_kd_tree(kd_tree);
-    // TODO: continue
+    upload_kd_node(nodes.data(), nodes_gpu, triangles,
+                   triangles_gpu,
+                   kd_tree.root_, 
+                   idx);
+
+    cudaCheckError(cudaMemcpy(nodes_gpu, nodes.data(), sizeof(*nodes_gpu) * nodes.size(), cudaMemcpyHostToDevice));
+    cudaCheckError(cudaMemcpy(triangles_gpu, triangles.data(), sizeof(*triangles_gpu) * triangles.size(), cudaMemcpyHostToDevice));
+
+    return nodes_gpu;
 }
