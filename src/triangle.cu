@@ -30,10 +30,13 @@ bool Triangle::intersect(Ray &ray,
     float t = f * edge2.dot_product(s);
     if (t > EPSILON) // ray intersection
     {
-        ray.u = u;
-        ray.v = v;
-        dist = t;
-        return true;
+        if (dist <= 0 || t < dist)
+        {
+            ray.u = u;
+            ray.v = v;
+            dist = t;
+            return true;
+        }
     }
     return false;
 }

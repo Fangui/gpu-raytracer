@@ -75,7 +75,7 @@ struct Ray
     Vector o;
     Vector dir;
     Vector inv;
-    Triangle tri;
+    Triangle *tri;
 
     float u;
     float v;

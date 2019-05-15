@@ -129,61 +129,6 @@ bool KdTree::KdNode::inside_box(const Ray &ray) const
     return true;
 }
 
-void KdTree::KdNode::search(Ray &ray, float &dist) const
- {
-    if (inside_box(ray))
-    {
-        float t;
-        for (auto it = beg; it < end; ++it)
-        {
-            float u = ray.u;
-            float v = ray.v; //FIXME
-            if (it->intersect(ray, t))
-            {
-                Vector inter = ray.o + ray.dir * t;
-                float distance = (inter - ray.o).get_dist();
-            //    float distance = fabs(inter[2] - ray.o[2]);
-                if (dist > distance || dist == -1)
-                {
-                    dist = distance;
-                    ray.tri = *it;
-                }
-                else // restore u v
-                {
-                    ray.u = u;
-                    ray.v = v;
-                }
-            }
-        }
-
-        if (false && axis == 2) // Good opti but may be dangerous
-        {
-            float prev_dist = dist;
-            if (ray.o[2] < beg->vertices[2][2])
-            {
-                left.get()->search(ray, dist);
-                if (prev_dist != dist) // find closer no need to visit 
-                    return;
-                right.get()->search(ray, dist);
-            }
-            else
-            {
-                right.get()->search(ray, dist);
-                if (prev_dist != dist)
-                    return;
-                left.get()->search(ray, dist);
-            }
-        }
-        else
-        {
-            if (left != nullptr)
-                left.get()->search(ray, dist);
-
-            if (right != nullptr)
-                right.get()->search(ray, dist);
-        }
-    }
-}
 
 bool KdTree::KdNode::search_inter(const Ray &ray) const
 {

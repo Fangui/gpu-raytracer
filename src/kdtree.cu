@@ -47,36 +47,34 @@ __device__ Pixel direct_light(struct KdNodeGpu *root, Ray &r, Material *material
         {
             for (Triangle *tri = node->beg; tri < node->end; ++tri)
             {
-                float t;
-                if (tri->intersect(r, t))
-                {
-                    if (dist == -1 || dist > t)
-                    {
-                        dist = t;
-                        r.tri = *tri;
-                    }
-                }
+                if (tri->intersect(r, dist)) // dist u v up to date in intersect
+                    r.tri = tri;
             }
 
             if (node->left != nullptr)
-            {
                 stack[idx++] = node->left;
+            if (node->right != nullptr)
                 stack[idx++] = node->right;
-            }
         }
     } while (idx);
 
     if (dist != -1)
     {
-        Vector light = *a_light;
+        Vector normal = r.tri->normal[0] * (1 - r.u - r.v)
+                      + r.tri->normal[1] * r.u + r.tri->normal[2] * r.v;
+        normal.norm_inplace();
+
+        Vector color = *a_light * materials[r.tri->id].ka;
         for (size_t i = 0; i < d_lights_len; ++i)
         {
-            auto contrib = (d_lights[i].dir * -1).dot_product(r.tri.normal[0]);
+            auto contrib = (d_lights[i].dir * -1).dot_product(normal);
             if (contrib > 0)
-                light += d_lights[i].color * contrib;
+                color += d_lights[i].color * contrib;
         }
-        light *= materials[r.tri.id].kd;
-        auto pix = Pixel(light);
+        auto &mat = materials[r.tri->id];
+        color *= mat.kd;
+
+        auto pix = Pixel(color);
         return pix;
     }
     return Pixel(0, 0, 0);
