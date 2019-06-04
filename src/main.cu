@@ -6,6 +6,7 @@
 #include "parse.hh"
 #include "vector.hh"
 #include "device.hh"
+#include "compute_light.hh"
 
 using namespace std::chrono;
 
@@ -114,6 +115,8 @@ int main(int argc, char *argv[])
     t1 = high_resolution_clock::now();
     render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, a_light, d_lights, scene.lights.size(), d_u, d_v, d_center, d_cam_pos,
                                       scene.width, scene.height);
+
+
 
     t2 = high_resolution_clock::now();
     std::cout << "Time to ray tracer: " << duration_cast<duration<double>>(t2 - t1).count() << "s\n";

@@ -7,11 +7,11 @@
 
 #include "kdtree.hh"
 
-const std::function<bool (Triangle, Triangle)> func[3] =
+const std::function<bool (const Triangle&, const Triangle&)> func[3] =
 {
-    [](Triangle a, Triangle b) { return a.get_mean()[0] < b.get_mean()[0]; },
-    [](Triangle a, Triangle b) { return a.get_mean()[1] < b.get_mean()[1]; },
-    [](Triangle a, Triangle b) { return a.get_mean()[2] < b.get_mean()[2]; }
+    [](const Triangle &a, const Triangle &b) { return a.get_mean()[0] < b.get_mean()[0]; },
+    [](const Triangle &a, const Triangle &b) { return a.get_mean()[1] < b.get_mean()[1]; },
+    [](const Triangle &a, const Triangle &b) { return a.get_mean()[2] < b.get_mean()[2]; }
 };
 
 static void get_extremum(float box[6], iterator_v beg,
@@ -49,7 +49,7 @@ static void get_extremum(float box[6], iterator_v beg,
         box[i] += 0.01;
 }
 
-static unsigned get_longest_axis(float box[6])
+static unsigned get_longest_axis(const float box[6])
 {
     float diff_x = box[1] - box[0];
     float diff_y = box[3] - box[2];
