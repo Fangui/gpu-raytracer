@@ -2,7 +2,7 @@
 #include "light.hh"
 #include "material.hh"
 
-__device__ bool is_inside(float *box, const Ray &ray)
+__device__ bool is_inside(const float *box, const Ray &ray)
 {
     const Vector &origin = ray.o;
     float tmin = (box[ray.sign[0]] - origin[0]) * ray.inv[0];
@@ -31,10 +31,10 @@ __device__ bool is_inside(float *box, const Ray &ray)
     return !(tmin > tzmax || tzmin > tmax);
 }
 
-__device__ Pixel direct_light(struct KdNodeGpu *root, Ray &r, Material *materials,
+__device__ Pixel direct_light(const KdNodeGpu *root, Ray &r, Material *materials,
                                Vector *a_light, Light *d_lights, size_t d_lights_len)
 {
-    KdNodeGpu *stack[64];
+    const KdNodeGpu *stack[64];
     stack[0] = root;
 
     size_t idx = 1;
@@ -42,7 +42,7 @@ __device__ Pixel direct_light(struct KdNodeGpu *root, Ray &r, Material *material
 
     do
     {
-        KdNodeGpu *node = stack[--idx];
+        const KdNodeGpu *node = stack[--idx];
         if (is_inside(node->box, r))
         {
             for (Triangle *tri = node->beg; tri < node->end; ++tri)

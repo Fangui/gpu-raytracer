@@ -11,13 +11,11 @@
 #define CUDA_HOSTDEV
 #endif
 
-
 struct Ray;
 
 struct Triangle
 {
     Triangle(const Vector &v1, const Vector &v2, const Vector &v3,
-             const Vector &p1, const Vector &p2, const Vector &p3,
              const Vector &n1, const Vector &n2, const Vector &n3,
              unsigned char id)
     {
@@ -29,16 +27,12 @@ struct Triangle
         normal[1] = n2;
         normal[2] = n3;
 
-        uv_pos[0] = p1;
-        uv_pos[1] = p2;
-        uv_pos[2] = p3;
-
         this->id = id;
     }
 
     Triangle() = default;
 
-    Vector get_mean(void) // return barycentre
+    Vector get_mean(void) const // return barycentre
     {
         float x = 0.f;
         float y = 0.f;
@@ -59,7 +53,6 @@ struct Triangle
 
     Vector vertices[3];
     Vector normal[3];
-    Vector uv_pos[3];
     unsigned char id;
 };
 
@@ -80,5 +73,5 @@ struct Ray
     float u;
     float v;
 
-    short sign[3];
+    unsigned char sign[3];
 };

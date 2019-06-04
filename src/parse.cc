@@ -345,14 +345,12 @@ void obj_to_vertices(const std::string &s, const std::vector<std::string> &mat_n
             if (skip_vt) // if not vn in file
             {
                 Triangle t(v[idx[0]], v[idx[3]], v[idx[6]],
-                           v[0], v[0], v[0],  //trash
                            vn[idx[2]], vn[idx[5]], vn[idx[8]], cur_idx);
                 v_tri.push_back(t);
             }
             else
             {
                 Triangle t(v[idx[0]], v[idx[3]], v[idx[6]],
-                           vt[idx[1]], vt[idx[4]], vt[idx[7]],
                            vn[idx[2]], vn[idx[5]], vn[idx[8]], cur_idx);
                 v_tri.push_back(t);
                 
