@@ -14,27 +14,20 @@ bool Triangle::intersect(Ray &ray,
     Vector s = ray.o - vertices[0];
     float u = f * (s.dot_product(h));
 
-    if (u < 0.0 || u > 1.0)
-        return false;
-
     s.cross_product_inplace(edge1);
     float v = f * (ray.dir.dot_product(s));
-    if (v < 0.0 || u + v > 1.0)
-        return false;
-
+    
     // At this stage we can compute t to find out where the intersection point is on the line.
     float t = f * edge2.dot_product(s);
-    if (t > EPSILON) // ray intersection
-    {
-        if (dist < 0 || t < dist)
-        {
-            ray.u = u;
-            ray.v = v;
-            dist = t;
-            return true;
-        }
-    }
-    return false;
+
+    if (u < 0.f || u > 1.f || v < 0.f || u + v > 1.f || t <= EPSILON 
+                || (dist >= 0.f && t >= dist))
+        return false;
+
+    ray.u = u;
+    ray.v = v;
+    dist = t;
+    return true;
 }
 
 bool Triangle::intersect(const Ray &ray) const
