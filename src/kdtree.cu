@@ -8,53 +8,53 @@ __device__ bool is_inside(const float *box, const Ray &ray)
     float tmin = (box[ray.sign[0]] - origin[0]) * ray.inv[0];
     float tmax = (box[1 - ray.sign[0]] - origin[0]) * ray.inv[0];
 
-    float tymin = (box[2 + ray.sign[1]] - origin[1]) * ray.inv[1];
-    float tymax = (box[3 - ray.sign[1]] - origin[1]) * ray.inv[1];
+    {
+        float tymin = (box[2 + ray.sign[1]] - origin[1]) * ray.inv[1];
+        float tymax = (box[3 - ray.sign[1]] - origin[1]) * ray.inv[1];
 
-    if (tmin > tymax || tymin > tmax)
-        return false;
+        if (tmin > tymax || tymin > tmax)
+            return false;
 
-    tmin = fmaxf(tmin, tymin);
-    tmax = fminf(tmax, tymax);
+        tmin = fmaxf(tmin, tymin);
+        tmax = fminf(tmax, tymax);
+    }
 
-    float tzmin = (box[4 + ray.sign[2]] - origin[2]) * ray.inv[2];
-    float tzmax = (box[5 - ray.sign[2]] - origin[2]) * ray.inv[2];
+    tmax -= (box[4 + ray.sign[2]] - origin[2]) * ray.inv[2];
+    tmin -= (box[5 - ray.sign[2]] - origin[2]) * ray.inv[2];
 
-    /*
-    if (tmin > tzmax || tzmin > tmax)
-        return false;
-
-    return true;*/
-    return !(tmin > tzmax || tzmin > tmax);
+    return !(tmin > 0 || tmax < 0);
 }
 
 #define DEPTH_MAX 20
 __device__ Pixel direct_light(const KdNodeGpu *root, Ray &r, const Material *materials,
                               const Vector *a_light, const Light *d_lights, size_t d_lights_len)
 {
-    const KdNodeGpu *stack[DEPTH_MAX];
-    stack[0] = root;
-
-    unsigned char idx = 1;
     float dist = -1;
 
-    do
     {
-        const KdNodeGpu *node = stack[--idx];
-        if (is_inside(node->box, r))
-        {
-            for (Triangle *tri = node->beg; tri < node->end; ++tri)
-            {
-                if (tri->intersect(r, dist)) // dist u v up to date in intersect
-                    r.tri = tri;
-            }
+        const KdNodeGpu *stack[DEPTH_MAX];
+        stack[0] = root;
 
-            if (node->left != nullptr)
-                stack[idx++] = node->left;
-            if (node->right != nullptr)
-                stack[idx++] = node->right;
-        }
-    } while (idx);
+        unsigned char idx = 1;
+
+        do
+        {
+            const KdNodeGpu *node = stack[--idx];
+            if (is_inside(node->box, r))
+            {
+                for (Triangle *tri = node->beg; tri < node->end; ++tri)
+                {
+                    if (tri->intersect(r, dist)) // dist u v up to date in intersect
+                        r.tri = tri;
+                }
+
+                if (node->left != nullptr)
+                    stack[idx++] = node->left;
+                if (node->right != nullptr)
+                    stack[idx++] = node->right;
+            }
+        } while (idx);
+    }
 
     if (dist != -1)
     {
