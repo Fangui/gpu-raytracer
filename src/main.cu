@@ -6,7 +6,6 @@
 #include "parse.hh"
 #include "vector.hh"
 #include "device.hh"
-#include "compute_light.hh"
 
 using namespace std::chrono;
 
@@ -30,7 +29,7 @@ __global__ void render(Pixel *d_vect, KdNodeGpu *d_tree, Material *d_materials,
     Vector dir = (o - *d_cam_pos).norm_inplace();
     Ray ray(*d_cam_pos, dir);
 
-    d_vect[i * height + j] = direct_light(d_tree, ray, d_materials, a_light, d_lights, d_lights_len);
+    d_vect[i * width + j] = direct_light(d_tree, ray, d_materials, a_light, d_lights, d_lights_len);
 }
 
 int main(int argc, char *argv[])
@@ -42,7 +41,7 @@ int main(int argc, char *argv[])
         path_scene = argv[1];
     else
     {
-        std::cerr << "Usage: ./main <scene> <nb_ray> <depth> <filter> <out_file>\n";
+        std::cerr << "Usage: ./main <scene> <outfile>\n";
         return 1;
     }
 
@@ -105,8 +104,8 @@ int main(int argc, char *argv[])
    cudaCheckError(cudaMemcpy(d_cam_pos, &scene.cam_pos, 
                              sizeof(struct Vector), cudaMemcpyHostToDevice));
 
-    constexpr int tx = 4;
-    constexpr int ty = 8;
+    constexpr int tx = 15; 
+    constexpr int ty = 32;
 
     dim3 dim_block(scene.width / tx + (scene.width % tx != 0),
                    scene.height / ty + (scene.height % ty != 0));
@@ -115,7 +114,6 @@ int main(int argc, char *argv[])
     t1 = high_resolution_clock::now();
     render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, a_light, d_lights, scene.lights.size(), d_u, d_v, d_center, d_cam_pos,
                                       scene.width, scene.height);
-
 
 
     t2 = high_resolution_clock::now();

@@ -14,11 +14,8 @@ __device__ bool is_inside(const float *box, const Ray &ray)
     if (tmin > tymax || tymin > tmax)
         return false;
 
-    if (tymin > tmin)
-        tmin = tymin;
-
-    if (tymax < tmax)
-        tmax = tymax;
+    tmin = fmaxf(tmin, tymin);
+    tmax = fminf(tmax, tymax);
 
     float tzmin = (box[4 + ray.sign[2]] - origin[2]) * ray.inv[2];
     float tzmax = (box[5 - ray.sign[2]] - origin[2]) * ray.inv[2];
@@ -31,13 +28,14 @@ __device__ bool is_inside(const float *box, const Ray &ray)
     return !(tmin > tzmax || tzmin > tmax);
 }
 
-__device__ Pixel direct_light(const KdNodeGpu *root, Ray &r, Material *materials,
-                               Vector *a_light, Light *d_lights, size_t d_lights_len)
+#define DEPTH_MAX 20
+__device__ Pixel direct_light(const KdNodeGpu *root, Ray &r, const Material *materials,
+                              const Vector *a_light, const Light *d_lights, size_t d_lights_len)
 {
-    const KdNodeGpu *stack[64];
+    const KdNodeGpu *stack[DEPTH_MAX];
     stack[0] = root;
 
-    size_t idx = 1;
+    unsigned char idx = 1;
     float dist = -1;
 
     do

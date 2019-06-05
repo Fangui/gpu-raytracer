@@ -76,7 +76,7 @@ KdTree::KdNode::KdNode(std::size_t& nodes_count, iterator_v beg, iterator_v end)
 {
     unsigned dist = std::distance(beg, end);
     get_extremum(box, beg, end);
-    if (dist < 3)
+    if (dist < 2)
     {
         this->beg = beg;
         this->end = end;

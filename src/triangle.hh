@@ -65,8 +65,8 @@ struct Ray
         sign[1] = inv[1] < 0;
         sign[2] = inv[2] < 0;
     };
-    Vector o;
-    Vector dir;
+    const Vector &o;
+    const Vector &dir;
     Vector inv;
     Triangle *tri;
 
