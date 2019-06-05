@@ -94,9 +94,12 @@ int main(int argc, char *argv[])
    cudaCheckError(cudaMalloc(&a_light, sizeof(Vector)));
    cudaCheckError(cudaMemcpy(a_light, &scene.a_light, sizeof(Vector), cudaMemcpyHostToDevice));
 
-   cudaCheckError(cudaMalloc(&d_lights, sizeof(Light) * scene.lights.size()));
+   auto nb_lights = std::min(scene.lights.size(), static_cast<size_t>(8));
+
+   cudaCheckError(cudaMalloc(&d_lights, sizeof(Light) * 8));
    cudaCheckError(cudaMemcpy(d_lights, scene.lights.data(), 
-                  sizeof(Light) * scene.lights.size(), cudaMemcpyHostToDevice));
+                  sizeof(Light) * nb_lights, cudaMemcpyHostToDevice));
+   cudaCheckError(cudaMemset(d_lights + nb_lights, 0, (8u - nb_lights) * sizeof(Light)));
 
    cudaCheckError(cudaMemcpy(d_u, &u_n, sizeof(struct Vector), cudaMemcpyHostToDevice));
    cudaCheckError(cudaMemcpy(d_v, &v_n, sizeof(struct Vector), cudaMemcpyHostToDevice));
@@ -104,8 +107,8 @@ int main(int argc, char *argv[])
    cudaCheckError(cudaMemcpy(d_cam_pos, &scene.cam_pos, 
                              sizeof(struct Vector), cudaMemcpyHostToDevice));
 
-    constexpr int tx = 15; 
-    constexpr int ty = 32;
+    constexpr int tx = 8;
+    constexpr int ty = 64;
 
     dim3 dim_block(scene.width / tx + (scene.width % tx != 0),
                    scene.height / ty + (scene.height % ty != 0));

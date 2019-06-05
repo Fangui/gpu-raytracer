@@ -63,7 +63,8 @@ __device__ Pixel direct_light(const KdNodeGpu *root, Ray &r, const Material *mat
         normal.norm_inplace();
 
         Vector color = *a_light * materials[r.tri->id].ka;
-        for (size_t i = 0; i < d_lights_len; ++i)
+#pragma unroll
+        for (size_t i = 0; i < 8; ++i)
         {
             auto contrib = (d_lights[i].dir * -1).dot_product(normal);
             if (contrib > 0)
