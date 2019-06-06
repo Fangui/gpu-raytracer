@@ -5,6 +5,8 @@
 #include "triangle.hh"
 #include "vector.hh"
 
+#define MAX_LIGHTS (static_cast<size_t>(8))
+
 struct Light // directional
 {
     Light(const Vector &color,

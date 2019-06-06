@@ -102,12 +102,12 @@ int main(int argc, char *argv[])
    cudaCheckError(cudaMalloc(&a_light, sizeof(Vector)));
    cudaCheckError(cudaMemcpy(a_light, &scene.a_light, sizeof(Vector), cudaMemcpyHostToDevice));
 
-   auto nb_lights = std::min(scene.lights.size(), static_cast<size_t>(8));
+   auto nb_lights = std::min(scene.lights.size(), MAX_LIGHTS);
 
-   cudaCheckError(cudaMalloc(&d_lights, sizeof(Light) * 8));
+   cudaCheckError(cudaMalloc(&d_lights, sizeof(Light) * MAX_LIGHTS));
    cudaCheckError(cudaMemcpy(d_lights, scene.lights.data(), 
                   sizeof(Light) * nb_lights, cudaMemcpyHostToDevice));
-   cudaCheckError(cudaMemset(d_lights + nb_lights, 0, (8u - nb_lights) * sizeof(Light)));
+   cudaCheckError(cudaMemset(d_lights + nb_lights, 0, (MAX_LIGHTS - nb_lights) * sizeof(Light)));
 
    cudaCheckError(cudaMemcpy(d_u, &u_n, sizeof(struct Vector), cudaMemcpyHostToDevice));
    cudaCheckError(cudaMemcpy(d_v, &v_n, sizeof(struct Vector), cudaMemcpyHostToDevice));
