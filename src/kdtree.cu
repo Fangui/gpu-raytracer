@@ -27,7 +27,7 @@ __device__ bool is_inside(const float *box, const Ray &ray)
 
 #define DEPTH_MAX 20
 __device__ Pixel direct_light(const KdNodeGpu *root, Ray &r, const Material *materials,
-                              const Vector *a_light, const Light *d_lights, size_t d_lights_len)
+                              const Vector *a_light, const Light *d_lights)
 {
     float dist = -1;
 
@@ -64,7 +64,7 @@ __device__ Pixel direct_light(const KdNodeGpu *root, Ray &r, const Material *mat
 
         Vector color = *a_light * materials[r.tri->id].ka;
 #pragma unroll
-        for (size_t i = 0; i < 8; ++i)
+        for (unsigned char i = 0; i < 8; ++i)
         {
             auto contrib = (d_lights[i].dir * -1).dot_product(normal);
             if (contrib > 0)

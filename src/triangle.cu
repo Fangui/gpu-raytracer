@@ -5,7 +5,7 @@ bool Triangle::intersect(Ray &ray,
 {
     const Vector edge1 = vertices[1] - vertices[0];
     const Vector edge2 = vertices[2] - vertices[0];
-    Vector h = ray.dir.cross_product(edge2);
+    const Vector h = ray.dir.cross_product(edge2);
 
     float det = edge1.dot_product(h);
     if (det > -EPSILON && det < EPSILON)

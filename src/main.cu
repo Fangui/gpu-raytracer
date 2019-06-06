@@ -10,7 +10,7 @@
 using namespace std::chrono;
 
 __global__ void render(Pixel *d_vect, KdNodeGpu *d_tree, Material *d_materials,
-                       Vector *a_light, Light *d_lights, size_t d_lights_len, Vector *d_u, Vector *d_v,
+                       Vector *a_light, Light *d_lights, Vector *d_u, Vector *d_v,
                        Vector *d_center, Vector *d_cam_pos, 
                        unsigned width, unsigned height)
 {
@@ -29,7 +29,7 @@ __global__ void render(Pixel *d_vect, KdNodeGpu *d_tree, Material *d_materials,
     Vector dir = (o - *d_cam_pos).norm_inplace();
     Ray ray(*d_cam_pos, dir);
 
-    d_vect[i * width + j] = direct_light(d_tree, ray, d_materials, a_light, d_lights, d_lights_len);
+    d_vect[i * width + j] = direct_light(d_tree, ray, d_materials, a_light, d_lights);
 }
 
 int main(int argc, char *argv[])
@@ -48,6 +48,7 @@ int main(int argc, char *argv[])
     if (argc > 2)
         out_file = argv[2];
 
+    auto t1 = high_resolution_clock::now();
     Scene scene = parse_scene(path_scene);
 
     Vector u_n = scene.cam_u.norm_inplace();
@@ -62,15 +63,22 @@ int main(int argc, char *argv[])
     std::vector<Triangle> vertices;
     for (const auto& name : scene.objs)
       obj_to_vertices(name, scene.mat_names, vertices, scene);
+    auto t2 = high_resolution_clock::now();
+    std::cout << "Time to parse file: " << duration_cast<duration<double>>(t2 - t1).count() 
+              << "s" << std::endl;
 
-    auto t1 = high_resolution_clock::now();
+
+    t1 = high_resolution_clock::now();
     auto tree = KdTree(vertices.begin(), vertices.end());
     std::cout << tree.size() << std::endl;
 
-    KdNodeGpu *d_tree = upload_kd_tree(tree, vertices);
-    auto t2 = high_resolution_clock::now();
-    std::cout << "Time to build tree: " << duration_cast<duration<double>>(t2 - t1).count()  << "s\n";
+    t2 = high_resolution_clock::now();
+    std::cout << "Time to build tree: " << duration_cast<duration<double>>(t2 - t1).count()  << "s" << std::endl;
 
+    KdNodeGpu *d_tree = upload_kd_tree(tree, vertices);
+    t1 = high_resolution_clock::now();
+    std::cout << "Time to upload in gpu: " << duration_cast<duration<double>>(t1 - t2).count()  << "s" << std::endl;
+    
     Pixel *d_vect;
     Vector *d_u;
     Vector *d_v;
@@ -115,17 +123,14 @@ int main(int argc, char *argv[])
     dim3 dim_thread(tx, ty);
 
     t1 = high_resolution_clock::now();
-    render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, a_light, d_lights, scene.lights.size(), d_u, d_v, d_center, d_cam_pos,
+    render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, a_light, d_lights, d_u, d_v, d_center, d_cam_pos,
                                       scene.width, scene.height);
 
+    cudaCheckError(cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(*d_vect),
+                   cudaMemcpyDeviceToHost));
 
     t2 = high_resolution_clock::now();
     std::cout << "Time to ray tracer: " << duration_cast<duration<double>>(t2 - t1).count() << "s\n";
-    cudaCheckError(cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(*d_vect),
-                   cudaMemcpyDeviceToHost));
-    auto t3 = high_resolution_clock::now();
-
-    std::cout << "Time to memcpy: " << duration_cast<duration<double>>(t3 - t2).count() << "s\n";
 
     cudaFree(d_materials);
     cudaFree(a_light);
