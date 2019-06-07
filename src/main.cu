@@ -96,7 +96,6 @@ int main(int argc, char *argv[])
    cudaCheckError(cudaMalloc(&d_v, sizeof(struct Vector)));
    cudaCheckError(cudaMalloc(&d_center, sizeof(struct Vector)));
    cudaCheckError(cudaMalloc(&d_cam_pos, sizeof(struct Vector)));
-   Pixel *vect = new Pixel[scene.width * scene.height];
 
    cudaCheckError(cudaMalloc(&a_light, sizeof(Vector)));
    cudaCheckError(cudaMemcpy(a_light, &scene.a_light, sizeof(Vector), cudaMemcpyHostToDevice));
@@ -125,7 +124,8 @@ int main(int argc, char *argv[])
     render<<<dim_block, dim_thread >>>(d_vect, d_tree, d_materials, a_light, d_lights, d_u, d_v, d_center, d_cam_pos,
                                       scene.width, scene.height);
 
-    cudaCheckError(cudaMemcpy(vect, d_vect, scene.width * scene.height * sizeof(*d_vect),
+    std::vector<Pixel> vect(scene.width * scene.height);
+    cudaCheckError(cudaMemcpy(vect.data(), d_vect, vect.size() * sizeof(*d_vect),
                    cudaMemcpyDeviceToHost));
 
     t2 = high_resolution_clock::now();
@@ -140,6 +140,5 @@ int main(int argc, char *argv[])
     cudaFree(d_center);
     cudaFree(d_cam_pos);
 
-    write_ppm(out_file + ".ppm", vect, scene.width, scene.height);
-    delete[] vect;
+    write_ppm(out_file + ".ppm", vect.data(), scene.width, scene.height);
 }
