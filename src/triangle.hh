@@ -49,7 +49,6 @@ struct Triangle
     }
 
     CUDA_HOSTDEV bool intersect(Ray &ray, float &dist) const;
-    bool intersect(const Ray &ray) const;
 
     Vector vertices[3];
     Vector normal[3];

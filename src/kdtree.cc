@@ -128,23 +128,3 @@ bool KdTree::KdNode::inside_box(const Ray &ray) const
 
     return true;
 }
-
-
-bool KdTree::KdNode::search_inter(const Ray &ray) const
-{
-    if (inside_box(ray))
-    {
-        for (auto it = beg; it < end; ++it)
-        {
-            if (it->intersect(ray))
-                return true;
-        }
-
-        if (left != nullptr && left.get()->search_inter(ray))
-            return true;
-
-        if (right != nullptr && right.get()->search_inter(ray))
-            return true;
-    }
-    return false;
-}

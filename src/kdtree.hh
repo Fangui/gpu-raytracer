@@ -79,13 +79,6 @@ public:
         return dist != -1;
     }
 
-
-    bool search_inter(const Ray &r) const
-    {
-        return root_.get()->search_inter(r);
-    }
-
-
     void print_infixe()
     {
         root_.get()->print_infixe();

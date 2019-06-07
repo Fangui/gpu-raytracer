@@ -17,10 +17,6 @@ struct Light // directional
 
     virtual ~Light() = default;
 
-    virtual Vector compute_light(const Vector &inter,
-                          const KdTree &tree,
-                          float &rat) const;
-
     Vector color;
     Vector dir;
 };
