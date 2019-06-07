@@ -197,13 +197,6 @@ void parse_materials(const std::string &s, Scene &scene)
                     strin >> trash >> illum;
                 else if (id == "Tf")
                     strin >> trash >> tf[0] >> tf[1] >> tf[2];
-                else if (id == "ma") // FIXME 
-                {
-                    if (line.substr(0,6) == "map_Kd")
-                        strin >> trash >> map_kd;
-                    else if (line.substr(0, 6) == "map_Ka")
-                        strin >> trash >> map_ka;
-                }
                 else if (id == "ma")
                     continue;
                 else if (id == "Tr")
@@ -217,29 +210,13 @@ void parse_materials(const std::string &s, Scene &scene)
                 if (id == "n")
                     break;
             }
-            Material mat(ns, ka, kd, ks, ke, ni, d, illum, tf, map_kd, map_ka);
+            Material mat(ns, ka, kd, ks, ke, ni, d, illum, tf);
 
             if (ke.is_not_null())
                 scene.emissive_name.push_back(name);
             //  std::cout << "newmtl " << name << std::endl;
             //  mat.dump();
             scene.map.emplace(std::make_pair(name, mat));
-            if (!map_kd.empty()) // insert texture
-            {
-                if (scene.map_text.find(map_kd) == scene.map_text.end())
-                {
-                    Texture t(map_kd);
-                    scene.map_text.emplace(std::make_pair(map_kd, t));
-                }
-            }
-            if (!map_ka.empty())
-            {
-                if (scene.map_text.find(map_ka) == scene.map_text.end())
-                {
-                    Texture t(map_ka);
-                    scene.map_text.emplace(std::make_pair(map_ka, t));
-                }
-            }
 
         }
     }

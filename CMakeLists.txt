@@ -20,7 +20,7 @@ add_definitions(-D_USE_MATH_DEFINES)
 
 add_executable(raytracer
     src/kdtree.cc src/triangle.cu src/material.cc src/parse.cc src/light.cc
-    src/matrix.cc src/texture.cc
+    src/matrix.cc
     src/vector.cu src/main.cu  src/upload.cu src/kdtree.cu
 )
 set_target_properties(raytracer PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
