@@ -28,8 +28,6 @@ public:
 
         bool search_inter(const Ray &ray) const;
 
-        bool inside_box(const Ray &ray) const;
-
         inline bool is_child(void) const { return left == right; }
 
         unsigned size(void)

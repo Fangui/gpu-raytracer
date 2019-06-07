@@ -67,7 +67,6 @@ int main(int argc, char *argv[])
     std::cout << "Time to parse file: " << duration_cast<duration<double>>(t2 - t1).count() 
               << "s" << std::endl;
 
-
     t1 = high_resolution_clock::now();
     auto tree = KdTree(vertices.begin(), vertices.end());
     std::cout << tree.size() << std::endl;

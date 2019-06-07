@@ -1,8 +1,10 @@
 #pragma once
 
+#include <cfloat>
+
 #include "vector.hh"
 
-#define EPSILON 0.00001
+#define EPSILON FLT_EPSILON
 #define BIAS    0.001
 
 #ifdef __CUDACC__
