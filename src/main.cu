@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
         path_scene = argv[1];
     else
     {
-        std::cerr << "Usage: ./main <scene> <outfile>\n";
+        std::cerr << "Usage: " << argv[0] << " <scene> <outfile>\n";
         return 1;
     }
 
