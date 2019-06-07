@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "device.hh"
+#include "upload.hh"
 
 void gpuAssert(cudaError_t code, const char *file, int line)
 {

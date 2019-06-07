@@ -5,7 +5,7 @@
 
 #include "parse.hh"
 #include "vector.hh"
-#include "device.hh"
+#include "upload.hh"
 
 using namespace std::chrono;
 
